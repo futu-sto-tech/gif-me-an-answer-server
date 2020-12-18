@@ -19,7 +19,6 @@ export function addGame(game: Game) {
 
 export function addPlayer(code: number, player: Player) {
   const game = getGame(code);
-  // TODO: Check if player is already added?
   const players = [...game.players, player];
   GAMES[code] = { ...game, players };
 }
