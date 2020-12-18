@@ -38,11 +38,7 @@ const createRounds = (rounds: number): GameRound[] => {
   return gameRounds;
 };
 
-<<<<<<< HEAD
 export async function createGame(req: Request<{ rounds: number }>, res: Response) {
-=======
-export function createGame(req: Request, res: Response) {
->>>>>>> Add player to game service
   const totalRounds = Number(req.body.rounds);
 
   const newGame: Game = {
