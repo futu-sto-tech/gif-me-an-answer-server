@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import codeGenerator from '../codeGenerator';
 import { Game, GameRound, GameStatus, GameRoundStatus, Player, PlayerStatus } from '../types';
-import * as gameService from '../service/gameService';
+import * as gameService from '../services/gameService';
 import CAPTIONS_JSON from '../data/captions.json';
 import { v4 as uuidv4 } from 'uuid';
 
