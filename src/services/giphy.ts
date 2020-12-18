@@ -8,9 +8,7 @@ client.defaults.params = {
   api_key: config.GIPHY_TOKEN,
   limit: config.GIPHY_LIMIT,
   lang: config.GIPHY_LANGUAGE,
-  r: 'pg-13',
 };
-client.defaults.params['api_key'] = config.GIPHY_TOKEN;
 
 interface ImageObject {
   url: string;

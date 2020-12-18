@@ -225,6 +225,27 @@ paths:
           schema:
             $ref: '#/definitions/Game'
 
+  /gifs/search:
+    post:
+      tags: [images search]
+      summary: Search for images (gifs)
+      produces:
+        - application/json
+      parameters:
+        - name: query
+          in: body
+          description: Query string
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Gif'
+
+
 definitions:
   Game:
     type: object
@@ -264,15 +285,50 @@ definitions:
 
   Image:
     type: object
+    description: An image which is part of a GameRound
     properties:
       id:
-        type: number
+        type: string
       url:
         type: string
       playerId:
         type: number
       votes:
         type: number
+
+  Gif:
+    type: object
+    description: A GIF search result
+    properties:
+      id:
+        type: string
+      title:
+        type: string
+      preview:
+        type: object
+        properties:
+          url:
+            type: string
+          width:
+            type: string
+          height:
+            type: string
+      original:
+        type: object
+        properties:
+          url:
+            type: string
+          width:
+            type: string
+          height:
+            type: string
+      fixedWidth:
+        type: object
+        properties:
+          url:
+            type: string
+          webp:
+            type: string
 
   Player:
     type: object
