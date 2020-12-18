@@ -1,4 +1,4 @@
-enum GameStatus {
+export enum GameStatus {
   ACTIVE,
   FINISHED,
 }
@@ -11,7 +11,7 @@ export interface Game {
   rounds: GameRound[];
 }
 
-enum GameRoundStatus {
+export enum GameRoundStatus {
   SELECT_GIF,
   PRESENT,
   VOTE,
