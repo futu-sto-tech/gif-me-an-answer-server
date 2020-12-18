@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
 import codeGenerator from '../codeGenerator';
-import { Game, GameRound, GameStatus, GameRoundStatus } from '../types';
+import { Game, GameRound, GameStatus, GameRoundStatus, Player, PlayerStatus } from '../types';
 import * as gameService from '../service/gameService';
 import CAPTIONS_JSON from '../data/captions.json';
+import { v4 as uuidv4 } from 'uuid';
 
 const CAPTIONS_SIZE = CAPTIONS_JSON.length;
 
@@ -37,7 +38,11 @@ const createRounds = (rounds: number): GameRound[] => {
   return gameRounds;
 };
 
+<<<<<<< HEAD
 export async function createGame(req: Request<{ rounds: number }>, res: Response) {
+=======
+export function createGame(req: Request, res: Response) {
+>>>>>>> Add player to game service
   const totalRounds = Number(req.body.rounds);
 
   const newGame: Game = {
@@ -52,7 +57,7 @@ export async function createGame(req: Request<{ rounds: number }>, res: Response
   return;
 }
 
-export async function getGame(req: Request, res: Response) {
+export function getGame(req: Request, res: Response) {
   const code = Number(req.params.code);
   const game = gameService.getGame(code);
   if (game) {
@@ -60,5 +65,21 @@ export async function getGame(req: Request, res: Response) {
     return;
   }
   res.status(400);
+  return;
+}
+
+// TODO: Generate new player object and return to user
+export function joinGame(req: Request, res: Response) {
+  const code = Number(req.params.code);
+  const name = req.body.name;
+
+  const player: Player = {
+    id: uuidv4(),
+    name,
+    status: PlayerStatus.JOINED,
+    points: 0,
+  };
+  gameService.addPlayer(code, player);
+  res.status(200);
   return;
 }

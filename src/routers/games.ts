@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { handlerWrapper } from './utils';
-import { createGame, getGame } from './../controllers/games';
+import { createGame, getGame, joinGame } from './../controllers/games';
 
 export default function GamesRouter() {
   const router = Router();
   router.post('/', handlerWrapper(createGame));
   router.get('/:code', handlerWrapper(getGame));
-  router.post('/:code/join', NotImplemented);
+  router.post('/:code/join', handlerWrapper(joinGame));
   router.post('/:code/ready', NotImplemented);
   router.post('/:code/rounds/:order/done', NotImplemented);
   router.post('/:code/rounds/:order/images', NotImplemented);

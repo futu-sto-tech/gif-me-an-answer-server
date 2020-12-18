@@ -33,7 +33,7 @@ export interface Image {
   votes: number;
 }
 
-enum PlayerStatus {
+export enum PlayerStatus {
   JOINED,
   READY,
 }
