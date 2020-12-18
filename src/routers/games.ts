@@ -1,6 +1,5 @@
+import { createGame, getGame } from './../controllers/games';
 import { RequestHandler, Router } from 'express';
-
-import { createGame } from './../controllers/games';
 
 export const handlerWrapper = (fn: RequestHandler): RequestHandler => async (req, res, next) =>
   Promise.resolve(fn(req, res, next)).catch(next);
@@ -8,7 +7,7 @@ export const handlerWrapper = (fn: RequestHandler): RequestHandler => async (req
 export default function GamesRouter() {
   const router = Router();
   router.post('/', handlerWrapper(createGame));
-  router.get('/:code', NotImplemented);
+  router.get('/:code', handlerWrapper(getGame));
   router.post('/:code/join', NotImplemented);
   router.post('/:code/ready', NotImplemented);
   router.post('/:code/rounds/:order/done', NotImplemented);

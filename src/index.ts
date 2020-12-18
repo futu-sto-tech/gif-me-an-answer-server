@@ -23,4 +23,5 @@ app.get('/captions', (_req, res) => {
 app.use('/api/v1/games', GamesRouter());
 app.use('/api/v1/gifs', GifsRouter());
 
+app.use('/api/v1', GamesRouter());
 app.listen(config.PORT, () => console.log(`Running on ${config.PORT}!`));
