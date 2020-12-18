@@ -2,6 +2,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import captionData from './data/captions.json';
+require('dotenv').config();
 
 const port = process.env.PORT || 8000;
 
