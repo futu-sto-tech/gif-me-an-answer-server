@@ -1,10 +1,9 @@
+require('dotenv').config();
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import captionData from './data/captions.json';
-require('dotenv').config();
-
-const port = process.env.PORT || 8000;
+import config from './config';
 
 const app = express();
 app.use(cors());
@@ -18,4 +17,4 @@ app.get('/captions', (_req, res) => {
   res.json(captionData);
 });
 
-app.listen(port, () => console.log(`Running on ${port}!`));
+app.listen(config.PORT, () => console.log(`Running on ${config.PORT}!`));
