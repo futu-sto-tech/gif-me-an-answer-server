@@ -1,10 +1,10 @@
-swagger: "2.0"
+swagger: '2.0'
 info:
-  version: "1.0.0"
-  title: "GIF me an answer"
+  version: '1.0.0'
+  title: 'GIF me an answer'
 
-host: "petstore.swagger.io"
-basePath: "/api/v1"
+host: 'petstore.swagger.io'
+basePath: '/api/v1'
 
 schemes:
   - https
@@ -27,10 +27,10 @@ paths:
               rounds:
                 type: number
       responses:
-        "200":
+        '200':
           description: Successful response
           schema:
-            $ref: "#/definitions/Game"
+            $ref: '#/definitions/Game'
 
   /games/{code}:
     get:
@@ -46,10 +46,10 @@ paths:
           required: true
           type: string
       responses:
-        "200":
+        '200':
           description: Successful operation
           schema:
-            $ref: "#/definitions/Game"
+            $ref: '#/definitions/Game'
 
   /games/{code}/join:
     post:
@@ -75,10 +75,10 @@ paths:
               name:
                 type: string
       responses:
-        "200":
+        '200':
           description: Successful response
           schema:
-            $ref: "#/definitions/Player"
+            $ref: '#/definitions/Player'
 
   /games/{code}/ready:
     post:
@@ -102,10 +102,10 @@ paths:
               player:
                 type: number
       responses:
-        "200":
+        '200':
           description: Successful response
           schema:
-            $ref: "#/definitions/Game"
+            $ref: '#/definitions/Game'
 
   /games/{code}/rounds/{order}/done:
     post:
@@ -134,10 +134,10 @@ paths:
               player:
                 type: number
       responses:
-        "200":
+        '200':
           description: Successful response
           schema:
-            $ref: "#/definitions/Game"
+            $ref: '#/definitions/Game'
 
   /games/{code}/rounds/{order}/images:
     post:
@@ -168,10 +168,10 @@ paths:
               url:
                 type: string
       responses:
-        "200":
+        '200':
           description: Successful response
           schema:
-            $ref: "#/definitions/Game"
+            $ref: '#/definitions/Game'
 
   /games/{code}/rounds/{order}/vote:
     post:
@@ -202,10 +202,10 @@ paths:
               image:
                 type: number
       responses:
-        "200":
+        '200':
           description: Successful response
           schema:
-            $ref: "#/definitions/Game"
+            $ref: '#/definitions/Game'
 
   /games/{code}/events:
     post:
@@ -220,10 +220,10 @@ paths:
           required: true
           type: string
       responses:
-        "200":
+        '200':
           description: Successful response
           schema:
-            $ref: "#/definitions/Game"
+            $ref: '#/definitions/Game'
 
 definitions:
   Game:
@@ -234,7 +234,7 @@ definitions:
       players:
         type: array
         items:
-          $ref: "#/definitions/Player"
+          $ref: '#/definitions/Player'
       status:
         type: string
         enum: [ACTIVE, FINISHED]
@@ -243,7 +243,7 @@ definitions:
       rounds:
         type: array
         items:
-          $ref: "#/definitions/GameRound"
+          $ref: '#/definitions/GameRound'
 
   GameRound:
     type: object
@@ -255,12 +255,12 @@ definitions:
         enum: [SELECT_GIF, PRESENT, VOTE, FINISHED]
       caption:
         type: string
-      presented_image:
-        $ref: "#/definitions/Image"
+      presentedImage:
+        $ref: '#/definitions/Image'
       images:
         type: array
         items:
-          $ref: "#/definitions/Image"
+          $ref: '#/definitions/Image'
 
   Image:
     type: object
@@ -269,7 +269,7 @@ definitions:
         type: number
       url:
         type: string
-      player_id:
+      playerId:
         type: number
       votes:
         type: number
