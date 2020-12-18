@@ -1,6 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
+import captionData from './data/captions.json';
 
 const port = process.env.PORT || 8000;
 
@@ -13,8 +14,7 @@ app.get('/', (_req, res) => {
 });
 
 app.get('/captions', (_req, res) => {
-  const captions = require('./data/captions.json');
-  res.json(captions);
+  res.json(captionData);
 });
 
 app.listen(port, () => console.log(`Running on ${port}!`));

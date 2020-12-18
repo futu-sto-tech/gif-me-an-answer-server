@@ -9,8 +9,14 @@
     "sourceMap": true,
     "strict": true,
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
+    "resolveJsonModule": true
   },
+  "include": [
+    "src/*.ts",
+    "src/**/*.ts",
+    "src/data/*.json"
+  ],
   "exclude": [
     "node_modules",
     "**/*.test.*",
