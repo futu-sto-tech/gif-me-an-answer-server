@@ -1,8 +1,6 @@
+import { Router } from 'express';
+import { handlerWrapper } from './utils';
 import { createGame, getGame } from './../controllers/games';
-import { RequestHandler, Router } from 'express';
-
-export const handlerWrapper = (fn: RequestHandler): RequestHandler => async (req, res, next) =>
-  Promise.resolve(fn(req, res, next)).catch(next);
 
 export default function GamesRouter() {
   const router = Router();
