@@ -238,7 +238,7 @@ definitions:
       status:
         type: string
         enum: [ACTIVE, FINISHED]
-      total_rounds:
+      totalRounds:
         type: number
       rounds:
         type: array

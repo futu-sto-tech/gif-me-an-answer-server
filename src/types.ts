@@ -1,4 +1,17 @@
 enum GameStatus {
+  ACTIVE,
+  FINISHED,
+}
+
+export interface Game {
+  code: number;
+  players: Player[];
+  status: GameStatus;
+  totalRounds: number;
+  rounds: GameRound[];
+}
+
+enum GameRoundStatus {
   SELECT_GIF,
   PRESENT,
   VOTE,
@@ -7,16 +20,16 @@ enum GameStatus {
 
 export interface GameRound {
   order: number;
-  status: GameStatus;
+  status: GameRoundStatus;
   caption: string;
   presentImage: string;
   images: Image[];
 }
 
 export interface Image {
-  id: number;
+  id: string;
   url: string;
-  playerId: number;
+  playerId: string;
   votes: number;
 }
 
@@ -26,7 +39,7 @@ enum PlayerStatus {
 }
 
 export interface Player {
-  id: number;
+  id: string;
   status: PlayerStatus;
   name: string;
   points: number;
