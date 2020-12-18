@@ -78,7 +78,7 @@ export function joinGame(req: Request, res: Response) {
   };
   gameService.addPlayer(code, player);
 
-  notifyPlayers(code, 'player-joined', gameService.getGame(code));
+  notifyPlayers(code, 'playerjoined', gameService.getGame(code));
 
   res.sendStatus(200);
   return;
@@ -95,13 +95,10 @@ let clients: Client[] = [];
 function notifyPlayers<T>(gameCode: number, eventName: string, data: T) {
   const players = clients.filter((c) => c.gameCode === gameCode);
 
-  const payload = {
-    event: eventName,
-    data,
-  };
+  const payload = data;
 
   players.forEach((p) => {
-    p.res.write(`${JSON.stringify(payload)}\n\n`);
+    p.res.write(`event: ${eventName}\ndata: ${JSON.stringify(payload)}\n\n`);
   });
 }
 
