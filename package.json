@@ -31,9 +31,11 @@
     "typescript": "^4.1.3"
   },
   "dependencies": {
+    "@types/uuid": "^8.3.0",
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "envalid": "^6.0.2",
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "uuid": "^8.3.2"
   }
 }
