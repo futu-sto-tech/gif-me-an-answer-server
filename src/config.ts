@@ -6,6 +6,8 @@ export default Envalid.cleanEnv(
     PORT: Envalid.port({ default: 8000 }),
     GIPHY_URL: Envalid.url(),
     GIPHY_TOKEN: Envalid.str(),
+    GIPHY_LIMIT: Envalid.num({ default: 25 }),
+    GIPHY_LANGUAGE: Envalid.str({ default: 'en' }),
   },
   { strict: true }
 );
