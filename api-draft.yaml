@@ -207,6 +207,24 @@ paths:
           schema:
             $ref: "#/definitions/Game"
 
+  /games/{code}/events:
+    post:
+      tags: [game events]
+      summary: Stream of game related events
+      produces:
+        - text/event-stream
+      parameters:
+        - name: code
+          in: path
+          description: Game code
+          required: true
+          type: string
+      responses:
+        "200":
+          description: Successful response
+          schema:
+            $ref: "#/definitions/Game"
+
 definitions:
   Game:
     type: object
