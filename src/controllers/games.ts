@@ -68,7 +68,6 @@ export function getGame(req: Request, res: Response) {
   return;
 }
 
-// TODO: Generate new player object and return to user
 export function joinGame(req: Request, res: Response) {
   const code = Number(req.params.code);
   const name = req.body.name;
