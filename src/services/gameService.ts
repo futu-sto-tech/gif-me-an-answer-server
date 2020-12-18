@@ -7,10 +7,6 @@ interface GameService {
 const GAMES: GameService = {};
 
 export function getGame(code: number) {
-  if (!(code in GAMES)) {
-    throw Error('Game could not be found');
-  }
-
   return GAMES[code];
 }
 

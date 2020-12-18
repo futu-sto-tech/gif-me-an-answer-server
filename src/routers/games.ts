@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { handlerWrapper } from './utils';
-import { createGame, getGame, joinGame } from './../controllers/games';
+import { createGame, eventsHandler, getGame, joinGame } from './../controllers/games';
 
 export default function GamesRouter() {
   const router = Router();
@@ -11,7 +11,7 @@ export default function GamesRouter() {
   router.post('/:code/rounds/:order/done', NotImplemented);
   router.post('/:code/rounds/:order/images', NotImplemented);
   router.post('/:code/rounds/:order/vote', NotImplemented);
-  router.post('/:code/events', NotImplemented);
+  router.get('/:code/events', handlerWrapper(eventsHandler));
   return router;
 }
 

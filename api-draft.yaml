@@ -26,6 +26,8 @@ paths:
             properties:
               rounds:
                 type: number
+              players:
+                type: number
       responses:
         '200':
           description: Successful response
