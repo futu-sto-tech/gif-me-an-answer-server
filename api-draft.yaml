@@ -1,0 +1,270 @@
+swagger: "2.0"
+info:
+  version: "1.0.0"
+  title: "GIF me an answer"
+
+host: "petstore.swagger.io"
+basePath: "/api/v1"
+
+schemes:
+  - https
+
+paths:
+  /games:
+    post:
+      tags: [game]
+      summary: Create a new game
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          description: Game configuration object
+          required: true
+          schema:
+            type: object
+            properties:
+              rounds:
+                type: number
+      responses:
+        "200":
+          description: Successful response
+          schema:
+            $ref: "#/definitions/Game"
+
+  /games/{code}:
+    get:
+      tags: [game]
+      summary: Find game by code
+      description: Returns a single game
+      produces:
+        - application/json
+      parameters:
+        - name: code
+          in: path
+          description: Game code
+          required: true
+          type: string
+      responses:
+        "200":
+          description: Successful operation
+          schema:
+            $ref: "#/definitions/Game"
+
+  /games/{code}/join:
+    post:
+      tags: [game]
+      summary: Add player to a game
+      produces:
+        - application/json
+      parameters:
+        - name: code
+          in: path
+          description: Game code
+          required: true
+          type: string
+        - name: body
+          in: body
+          description: New player object
+          required: true
+          schema:
+            type: object
+            required:
+              - name
+            properties:
+              name:
+                type: string
+      responses:
+        "200":
+          description: Successful response
+          schema:
+            $ref: "#/definitions/Player"
+
+  /games/{code}/ready:
+    post:
+      tags: [game]
+      summary: Announce that a player is ready to start game
+      produces:
+        - application/json
+      parameters:
+        - name: code
+          in: path
+          description: Game code
+          required: true
+          type: string
+        - name: body
+          in: body
+          description: Player object
+          required: true
+          schema:
+            type: object
+            properties:
+              player:
+                type: number
+      responses:
+        "200":
+          description: Successful response
+          schema:
+            $ref: "#/definitions/Game"
+
+  /games/{code}/rounds/{order}/done:
+    post:
+      tags: [game round]
+      summary: Announce that a player is ready for next round
+      produces:
+        - application/json
+      parameters:
+        - name: code
+          in: path
+          description: Game code
+          required: true
+          type: string
+        - name: order
+          in: path
+          description: Game round order
+          required: true
+          type: number
+        - name: body
+          in: body
+          description: Player object
+          required: true
+          schema:
+            type: object
+            properties:
+              player:
+                type: number
+      responses:
+        "200":
+          description: Successful response
+          schema:
+            $ref: "#/definitions/Game"
+
+  /games/{code}/rounds/{order}/images:
+    post:
+      tags: [game round]
+      summary: Submit a GIF to a round
+      produces:
+        - application/json
+      parameters:
+        - name: code
+          in: path
+          description: Game code
+          required: true
+          type: string
+        - name: order
+          in: path
+          description: Game round order
+          required: true
+          type: number
+        - name: body
+          in: body
+          description: Image object
+          required: true
+          schema:
+            type: object
+            properties:
+              player:
+                type: number
+              url:
+                type: string
+      responses:
+        "200":
+          description: Successful response
+          schema:
+            $ref: "#/definitions/Game"
+
+  /games/{code}/rounds/{order}/vote:
+    post:
+      tags: [game round]
+      summary: Vote for an image
+      produces:
+        - application/json
+      parameters:
+        - name: code
+          in: path
+          description: Game code
+          required: true
+          type: string
+        - name: order
+          in: path
+          description: Game round order
+          required: true
+          type: number
+        - name: body
+          in: body
+          description: Vote object
+          required: true
+          schema:
+            type: object
+            properties:
+              player:
+                type: number
+              image:
+                type: number
+      responses:
+        "200":
+          description: Successful response
+          schema:
+            $ref: "#/definitions/Game"
+
+definitions:
+  Game:
+    type: object
+    properties:
+      code:
+        type: string
+      players:
+        type: array
+        items:
+          $ref: "#/definitions/Player"
+      status:
+        type: string
+        enum: [ACTIVE, FINISHED]
+      total_rounds:
+        type: number
+      rounds:
+        type: array
+        items:
+          $ref: "#/definitions/GameRound"
+
+  GameRound:
+    type: object
+    properties:
+      order:
+        type: number
+      status:
+        type: string
+        enum: [SELECT_GIF, PRESENT, VOTE, FINISHED]
+      caption:
+        type: string
+      presented_image:
+        $ref: "#/definitions/Image"
+      images:
+        type: array
+        items:
+          $ref: "#/definitions/Image"
+
+  Image:
+    type: object
+    properties:
+      id:
+        type: number
+      url:
+        type: string
+      player_id:
+        type: number
+      votes:
+        type: number
+
+  Player:
+    type: object
+    properties:
+      id:
+        type: number
+      status:
+        type: string
+        enum: [JOINED, READY]
+      name:
+        type: string
+      points:
+        type: number
