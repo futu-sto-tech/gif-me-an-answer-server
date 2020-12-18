@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import codeGenerator from '../codeGenerator';
 import { Game, GameRound, GameStatus, GameRoundStatus } from '../types';
+import * as gameService from '../service/gameService';
 import CAPTIONS_JSON from '../data/captions.json';
 
 const CAPTIONS_SIZE = CAPTIONS_JSON.length;
@@ -46,7 +47,18 @@ export async function createGame(req: Request, res: Response) {
     totalRounds,
     rounds: createRounds(totalRounds),
   };
-
+  gameService.addGame(newGame);
   res.json(newGame);
+  return;
+}
+
+export async function getGame(req: Request, res: Response) {
+  const code = Number(req.params.code);
+  const game = gameService.getGame(code);
+  if (game) {
+    res.json(game);
+    return;
+  }
+  res.status(400);
   return;
 }
