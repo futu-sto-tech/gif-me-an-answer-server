@@ -1,4 +1,5 @@
 import { Game, Player } from '../types';
+import { v4 as uuidv4 } from 'uuid';
 
 interface GameService {
   [code: number]: Game;
@@ -18,12 +19,23 @@ export function addGame(game: Game) {
   GAMES[game.code] = game;
 }
 
-export function addPlayer(code: number, player: Player) {
+export function addPlayer(code: number, name: string): Player {
   const game = getGame(code);
-  if (game.players.some((p) => p.name === player.name)) {
+
+  if (game.players.some((p) => p.name === name)) {
     throw Error('Player with this name already exists!');
   }
 
+  const player: Player = {
+    id: uuidv4(),
+    name,
+    status: PlayerStatus.JOINED,
+    points: 0,
+  };
+
   const players = [...game.players, player];
   GAMES[code] = { ...game, players };
+
+  return player;
+}
 }

@@ -3,7 +3,6 @@ import codeGenerator from '../codeGenerator';
 import { Game, GameRound, GameStatus, GameRoundStatus, Player, PlayerStatus, Events } from '../types';
 import * as gameService from '../services/gameService';
 import CAPTIONS_JSON from '../data/captions.json';
-import { v4 as uuidv4 } from 'uuid';
 import { ClientNotifier } from '../services/clientNotifier';
 
 const CAPTIONS_SIZE = CAPTIONS_JSON.length;
@@ -70,18 +69,11 @@ export const joinGame = (notifier: ClientNotifier) => (req: Request, res: Respon
   const code = Number(req.params.code);
   const name = req.body.name;
 
-  const player: Player = {
-    id: uuidv4(),
-    name,
-    status: PlayerStatus.JOINED,
-    points: 0,
-  };
-  gameService.addPlayer(code, player);
+  const player = gameService.addPlayer(code, name);
 
   notifier.notifyGameClients(code, Events.PlayerJoined, gameService.getGame(code));
 
-  res.sendStatus(200);
-  return;
+  res.json(player);
 };
 
 export const gameEvents = (notifier: ClientNotifier) => (req: Request, res: Response) => {
