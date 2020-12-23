@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { handlerWrapper } from './utils';
-import { createGame, gameEvents, getGame, joinGame } from './../controllers/games';
+import { createGame, gameEvents, getGame, joinGame, playerReady } from './../controllers/games';
 import { ClientNotifier } from '../services/clientNotifier';
 
 export default function GamesRouter(notifier: ClientNotifier) {
@@ -8,7 +8,7 @@ export default function GamesRouter(notifier: ClientNotifier) {
   router.post('/', handlerWrapper(createGame));
   router.get('/:code', handlerWrapper(getGame));
   router.post('/:code/join', handlerWrapper(joinGame(notifier)));
-  router.post('/:code/ready', NotImplemented);
+  router.post('/:code/ready', handlerWrapper(playerReady(notifier)));
   router.post('/:code/rounds/:order/done', NotImplemented);
   router.post('/:code/rounds/:order/images', NotImplemented);
   router.post('/:code/rounds/:order/vote', NotImplemented);

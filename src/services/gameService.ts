@@ -1,5 +1,5 @@
-import { Game, Player } from '../types';
 import { v4 as uuidv4 } from 'uuid';
+import { Game, Player, PlayerStatus } from '../types';
 
 interface GameService {
   [code: number]: Game;
@@ -38,4 +38,19 @@ export function addPlayer(code: number, name: string): Player {
 
   return player;
 }
+
+export function playerReady(code: number, playerId: string) {
+  const game = GAMES[code];
+
+  if (!game) {
+    throw Error(`Game ${code} does not exist!`);
+  }
+
+  const player = game.players.find((p) => p.id === playerId);
+
+  if (!player) {
+    throw Error(`Player ${playerId} not found!`);
+  }
+
+  player.status = PlayerStatus.READY;
 }

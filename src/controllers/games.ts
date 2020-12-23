@@ -65,6 +65,19 @@ export function getGame(req: Request, res: Response) {
   res.sendStatus(404);
 }
 
+export const playerReady = (notifier: ClientNotifier) => (
+  req: Request<{ code: number }, any, { player: string }>,
+  res: Response
+) => {
+  const gameCode = Number(req.params.code);
+  const playerId = req.body.player;
+
+  gameService.playerReady(gameCode, playerId);
+  notifier.notifyGameClients(gameCode, Events.PlayerReady, gameService.getGame(gameCode));
+
+  res.sendStatus(200);
+};
+
 export const joinGame = (notifier: ClientNotifier) => (req: Request, res: Response) => {
   const code = Number(req.params.code);
   const name = req.body.name;
