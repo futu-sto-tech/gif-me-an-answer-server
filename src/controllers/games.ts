@@ -38,7 +38,7 @@ const createRounds = (rounds: number): GameRound[] => {
   return gameRounds;
 };
 
-export async function createGame(req: Request<{ rounds: number; players: number }>, res: Response) {
+export async function createGame(req: Request<{}, any, { rounds: number; players: number }>, res: Response) {
   const totalRounds = Number(req.body.rounds);
   const totalPlayers = Number(req.body.players);
   const newGame: Game = {
@@ -50,8 +50,8 @@ export async function createGame(req: Request<{ rounds: number; players: number 
     rounds: createRounds(totalRounds),
   };
   gameService.addGame(newGame);
+
   res.json(newGame);
-  return;
 }
 
 export function getGame(req: Request, res: Response) {
@@ -61,8 +61,8 @@ export function getGame(req: Request, res: Response) {
     res.json(game);
     return;
   }
-  res.status(404);
-  return;
+
+  res.sendStatus(404);
 }
 
 export const joinGame = (notifier: ClientNotifier) => (req: Request, res: Response) => {
