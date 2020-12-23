@@ -12,6 +12,7 @@ import logger from './logger';
 import httpContext from 'express-http-context';
 import { requestContext } from './middleware/requestContext';
 import { requestLogger } from './middleware/requestLogger';
+import { ClientNotifier } from './services/clientNotifier';
 
 const app = express();
 
@@ -25,7 +26,9 @@ app.get('/', (_req, res) => {
   res.json({ message: "I'm alive!!!" });
 });
 
-app.use('/api/v1/games', GamesRouter());
+const notifier = new ClientNotifier();
+
+app.use('/api/v1/games', GamesRouter(notifier));
 app.use('/api/v1/gifs', GifsRouter());
 
 app.use(errorHandler());

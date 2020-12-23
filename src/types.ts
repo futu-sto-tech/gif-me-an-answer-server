@@ -45,3 +45,7 @@ export interface Player {
   name: string;
   points: number;
 }
+
+export enum Events {
+  PlayerJoined = 'playerjoined',
+}

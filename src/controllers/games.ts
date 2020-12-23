@@ -1,10 +1,10 @@
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import codeGenerator from '../codeGenerator';
-import { Game, GameRound, GameStatus, GameRoundStatus, Player, PlayerStatus } from '../types';
+import { Game, GameRound, GameStatus, GameRoundStatus, Player, PlayerStatus, Events } from '../types';
 import * as gameService from '../services/gameService';
 import CAPTIONS_JSON from '../data/captions.json';
 import { v4 as uuidv4 } from 'uuid';
-import logger from '../logger';
+import { ClientNotifier } from '../services/clientNotifier';
 
 const CAPTIONS_SIZE = CAPTIONS_JSON.length;
 
@@ -28,7 +28,7 @@ const createRounds = (rounds: number): GameRound[] => {
   const captions = getCaptions(rounds);
   const gameRounds = Array(rounds)
     .fill('')
-    .map((n, i) => ({
+    .map((_n, i) => ({
       order: i,
       status: GameRoundStatus.SELECT_GIF,
       caption: captions[i],
@@ -66,7 +66,7 @@ export function getGame(req: Request, res: Response) {
   return;
 }
 
-export function joinGame(req: Request, res: Response) {
+export const joinGame = (notifier: ClientNotifier) => (req: Request, res: Response) => {
   const code = Number(req.params.code);
   const name = req.body.name;
 
@@ -78,31 +78,13 @@ export function joinGame(req: Request, res: Response) {
   };
   gameService.addPlayer(code, player);
 
-  notifyPlayers(code, 'playerjoined', gameService.getGame(code));
+  notifier.notifyGameClients(code, Events.PlayerJoined, gameService.getGame(code));
 
   res.sendStatus(200);
   return;
-}
+};
 
-interface Client {
-  id: string;
-  gameCode: number;
-  res: Response;
-}
-
-let clients: Client[] = [];
-
-function notifyPlayers<T>(gameCode: number, eventName: string, data: T) {
-  const players = clients.filter((c) => c.gameCode === gameCode);
-
-  const payload = data;
-
-  players.forEach((p) => {
-    p.res.write(`event: ${eventName}\ndata: ${JSON.stringify(payload)}\n\n`);
-  });
-}
-
-export function eventsHandler(req: Request, res: Response) {
+export const gameEvents = (notifier: ClientNotifier) => (req: Request, res: Response) => {
   const { code } = req.params;
 
   const gameCode = Number(code);
@@ -118,29 +100,12 @@ export function eventsHandler(req: Request, res: Response) {
     Connection: 'keep-alive',
     'Cache-Control': 'no-cache',
   });
+  // Send the list of supported events to the client
+  res.write(`data: ${JSON.stringify({ supportedEvents: Object.values(Events) })}\n\n`);
 
-  const client: Client = {
-    id: uuidv4(),
-    gameCode,
-    res,
-  };
-
-  clients.push(client);
-  logger.info({
-    message: 'Client connected',
-    id: client.id,
-    game: gameCode,
-    clientCount: clients.length,
-  });
+  const clientId = notifier.addClient(game.code, res);
 
   req.on('close', () => {
-    clients = clients.filter((c) => c.id !== client.id);
-    logger.info({
-      message: 'Client disconnected',
-      id: client.id,
-      game: gameCode,
-      clientCount: clients.length,
-      requestId: req.id,
-    });
+    notifier.removeClient(clientId);
   });
-}
+};
