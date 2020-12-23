@@ -75,6 +75,10 @@ export const playerReady = (notifier: ClientNotifier) => (
   gameService.playerReady(gameCode, playerId);
   notifier.notifyGameClients(gameCode, Events.PlayerReady, gameService.getGame(gameCode));
 
+  if (gameService.allPlayersReady(gameCode)) {
+    notifier.notifyGameClients(gameCode, Events.GameReady, gameService.getGame(gameCode));
+  }
+
   res.sendStatus(200);
 };
 

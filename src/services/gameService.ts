@@ -54,3 +54,13 @@ export function playerReady(code: number, playerId: string) {
 
   player.status = PlayerStatus.READY;
 }
+
+export function allPlayersReady(code: number) {
+  const game = GAMES[code];
+
+  if (!game) {
+    throw Error(`Game ${code} does not exist!`);
+  }
+
+  return game.players.every((p) => p.status === PlayerStatus.READY);
+}

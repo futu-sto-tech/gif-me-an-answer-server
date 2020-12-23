@@ -49,4 +49,6 @@ export interface Player {
 export enum Events {
   PlayerJoined = 'playerjoined',
   PlayerReady = 'playerready',
+
+  GameReady = 'gameready',
 }
