@@ -166,7 +166,7 @@ paths:
             type: object
             properties:
               player:
-                type: number
+                type: string
               url:
                 type: string
       responses:
@@ -336,7 +336,7 @@ definitions:
     type: object
     properties:
       id:
-        type: number
+        type: string
       status:
         type: string
         enum: [JOINED, READY]

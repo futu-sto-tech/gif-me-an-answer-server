@@ -29,7 +29,7 @@ const createRounds = (rounds: number): GameRound[] => {
     .fill('')
     .map((_n, i) => ({
       order: i,
-      status: GameRoundStatus.SELECT_GIF,
+      status: GameRoundStatus.NOT_STARTED,
       caption: captions[i],
       images: [],
       presentImage: '',
@@ -77,6 +77,8 @@ export const playerReady = (notifier: ClientNotifier) => (
 
   if (gameService.allPlayersReady(gameCode)) {
     notifier.notifyGameClients(gameCode, Events.GameReady, gameService.getGame(gameCode));
+    gameService.startNewRound(gameCode);
+    notifier.notifyGameClients(gameCode, Events.RoundStarted, gameService.getGame(gameCode));
   }
 
   res.sendStatus(200);
@@ -91,6 +93,22 @@ export const joinGame = (notifier: ClientNotifier) => (req: Request, res: Respon
   notifier.notifyGameClients(code, Events.PlayerJoined, gameService.getGame(code));
 
   res.json(player);
+};
+
+export const selectImage = (notifier: ClientNotifier) => (
+  req: Request<{ code: number; order: number }, any, { player: string; url: string }>,
+  res: Response
+) => {
+  const gameCode = Number(req.params.code);
+  const { player, url } = req.body;
+
+  gameService.selectImage(gameCode, player, url);
+
+  const game = gameService.getGame(gameCode);
+
+  notifier.notifyGameClients(gameCode, Events.PlayerSelectedGif, game);
+
+  res.json(game);
 };
 
 export const gameEvents = (notifier: ClientNotifier) => (req: Request, res: Response) => {
