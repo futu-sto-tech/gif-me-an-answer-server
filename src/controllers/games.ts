@@ -110,7 +110,7 @@ export const gameEvents = (notifier: ClientNotifier) => (req: Request, res: Resp
     'Cache-Control': 'no-cache',
   });
   // Send the list of supported events to the client
-  res.write(`data: ${JSON.stringify({ supportedEvents: Object.values(Events) })}\n\n`);
+  res.write(`data: ${JSON.stringify({ event: Events.Init, supportedEvents: Object.values(Events) })}\n\n`);
 
   const clientId = notifier.addClient(game.code, res);
 

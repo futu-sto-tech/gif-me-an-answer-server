@@ -47,8 +47,13 @@ export class ClientNotifier {
   notifyGameClients<T>(gameCode: number, eventName: Events, data: T) {
     const players = this.clients.filter((c) => c.gameCode === gameCode);
 
+    const payload = {
+      event: eventName,
+      data,
+    };
+
     players.forEach((p) => {
-      p.res.write(`event: ${eventName}\ndata: ${JSON.stringify(data)}\n\n`);
+      p.res.write(`data: ${JSON.stringify(payload)}\n\n`);
     });
   }
 }

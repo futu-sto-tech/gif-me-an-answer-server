@@ -47,6 +47,8 @@ export interface Player {
 }
 
 export enum Events {
+  Init = 'init',
+
   PlayerJoined = 'playerjoined',
   PlayerReady = 'playerready',
 
