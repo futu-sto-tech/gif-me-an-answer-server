@@ -1,6 +1,6 @@
 export enum GameStatus {
-  ACTIVE,
-  FINISHED,
+  ACTIVE = 'ACTIVE',
+  FINISHED = 'FINISHED',
 }
 
 export interface Game {
@@ -13,10 +13,10 @@ export interface Game {
 }
 
 export enum GameRoundStatus {
-  SELECT_GIF,
-  PRESENT,
-  VOTE,
-  FINSIHED,
+  SELECT_GIF = 'SELECT_GIF',
+  PRESENT = 'PRESENT',
+  VOTE = 'VOTE',
+  FINSIHED = 'FINISHED',
 }
 
 export interface GameRound {
@@ -35,8 +35,8 @@ export interface Image {
 }
 
 export enum PlayerStatus {
-  JOINED,
-  READY,
+  JOINED = 'JOINED',
+  READY = 'READY',
 }
 
 export interface Player {
