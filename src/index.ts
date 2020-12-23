@@ -1,6 +1,7 @@
 require('dotenv').config();
 import './types/common';
 
+import path from 'path';
 import GamesRouter from './routers/games';
 import GifsRouter from './routers/gifs';
 import bodyParser from 'body-parser';
@@ -24,6 +25,10 @@ app.use(bodyParser.json());
 
 app.get('/', (_req, res) => {
   res.json({ message: "I'm alive!!!" });
+});
+
+app.get('/api-spec', (_req, res) => {
+  res.sendFile(path.resolve(__dirname, './api-spec.yaml'));
 });
 
 const notifier = new ClientNotifier();
