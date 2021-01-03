@@ -55,14 +55,18 @@ export function playerReady(code: number, playerId: string) {
   player.status = PlayerStatus.READY;
 }
 
-export function allPlayersReady(code: number) {
+export function allPlayersInState(code: number, state: PlayerStatus) {
   const game = GAMES[code];
 
   if (!game) {
     throw Error(`Game ${code} does not exist!`);
   }
 
-  return game.players.every((p) => p.status === PlayerStatus.READY);
+  return game.players.every((p) => p.status === state);
+}
+
+export function allPlayersReady(code: number) {
+  return allPlayersInState(code, PlayerStatus.READY);
 }
 
 export function selectImage(code: number, playerId: string, imageUrl: string) {
@@ -99,15 +103,75 @@ export function startNewRound(code: number) {
     throw Error(`Game ${code} does not exist!`);
   }
 
-  if (game.rounds.some((r) => r.status === GameRoundStatus.SELECT_GIF)) {
+  const noRemainingRounds = !game.rounds.some((r) => r.status === GameRoundStatus.NOT_STARTED);
+  const inActiveRound = game.rounds.some(
+    (r) => ![GameRoundStatus.NOT_STARTED, GameRoundStatus.FINSIHED].includes(r.status)
+  );
+
+  if (noRemainingRounds || inActiveRound) {
     return;
   }
 
-  const nextRound = game.rounds.find((r) => r.status === GameRoundStatus.NOT_STARTED);
+  startImageSelection(code);
+}
 
-  if (!nextRound) {
-    throw Error('No next round');
+function changeGameRoundStatus(code: number, from: GameRoundStatus, to: GameRoundStatus) {
+  const game = GAMES[code];
+
+  if (!game) {
+    throw Error(`Game ${code} does not exist!`);
   }
 
-  nextRound.status = GameRoundStatus.SELECT_GIF;
+  const round = game.rounds.find((r) => r.status === from);
+
+  if (!round) {
+    throw Error(`Game ${code} is not currently in state ${from}`);
+  }
+
+  round.status = to;
+}
+
+export function startImageSelection(code: number) {
+  return changeGameRoundStatus(code, GameRoundStatus.NOT_STARTED, GameRoundStatus.SELECT_GIF);
+}
+
+export function startVote(code: number) {
+  return changeGameRoundStatus(code, GameRoundStatus.SELECT_GIF, GameRoundStatus.VOTE);
+}
+
+export function startPresentation(code: number) {
+  return changeGameRoundStatus(code, GameRoundStatus.VOTE, GameRoundStatus.PRESENT);
+}
+
+export function vote(code: number, playerId: string, imageId: string) {
+  const game = GAMES[code];
+
+  if (!game) {
+    throw Error(`Game ${code} does not exist!`);
+  }
+
+  const round = game.rounds.find((r) => r.status === GameRoundStatus.VOTE);
+
+  if (!round) {
+    throw Error(`Game ${code} is not currently in a voting state`);
+  }
+
+  const image = round.images.find((img) => img.id === imageId);
+  const player = game.players.find((p) => p.id === playerId);
+
+  if (!image) {
+    throw Error(`No image with id ${imageId}`);
+  }
+  if (!player) {
+    throw Error(`No player with id ${playerId}`);
+  }
+  if (player.status === PlayerStatus.VOTED) {
+    throw Error(`Player ${playerId} already voted`);
+  }
+  if (image.playerId === playerId) {
+    throw Error(`Not allowed to vote on your own image`);
+  }
+
+  image.votes += 1;
+  player.status = PlayerStatus.VOTED;
 }

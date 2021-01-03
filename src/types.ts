@@ -15,8 +15,8 @@ export interface Game {
 export enum GameRoundStatus {
   NOT_STARTED = 'NOT_STARTED',
   SELECT_GIF = 'SELECT_GIF',
-  PRESENT = 'PRESENT',
   VOTE = 'VOTE',
+  PRESENT = 'PRESENT',
   FINSIHED = 'FINISHED',
 }
 
@@ -38,6 +38,8 @@ export interface Image {
 export enum PlayerStatus {
   JOINED = 'JOINED',
   READY = 'READY',
+  SELECTED_GIF = 'SELECTED_GIF',
+  VOTED = 'VOTED',
 }
 
 export interface Player {
@@ -53,8 +55,10 @@ export enum Events {
   PlayerJoined = 'playerjoined',
   PlayerReady = 'playerready',
   PlayerSelectedGif = 'playerselectedgif',
+  PlayerVoted = 'playervoted',
 
   GameReady = 'gameready',
 
   RoundStarted = 'roundstarted',
+  RoundStateChanged = 'roundstatechanged',
 }
