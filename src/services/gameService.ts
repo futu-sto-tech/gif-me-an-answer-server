@@ -1,5 +1,6 @@
-import { v4 as uuidv4 } from 'uuid';
 import { Game, GameRoundStatus, Player, PlayerStatus } from '../types';
+
+import { v4 as uuidv4 } from 'uuid';
 
 interface GameService {
   [code: number]: Game;
@@ -7,7 +8,7 @@ interface GameService {
 
 const GAMES: GameService = {};
 
-export function getGame(code: number) {
+export function getGame(code: number): Game | undefined {
   return GAMES[code];
 }
 
@@ -21,6 +22,10 @@ export function addGame(game: Game) {
 
 export function addPlayer(code: number, name: string): Player {
   const game = getGame(code);
+
+  if (!game) {
+    throw Error(`Game ${code} does not exist!`);
+  }
 
   if (game.players.some((p) => p.name === name)) {
     throw Error('Player with this name already exists!');
@@ -56,7 +61,7 @@ export function playerReady(code: number, playerId: string) {
 }
 
 export function allPlayersInState(code: number, state: PlayerStatus) {
-  const game = GAMES[code];
+  const game = getGame(code);
 
   if (!game) {
     throw Error(`Game ${code} does not exist!`);
@@ -66,6 +71,16 @@ export function allPlayersInState(code: number, state: PlayerStatus) {
 }
 
 export function allPlayersReady(code: number) {
+  const game = getGame(code);
+
+  if (!game) {
+    throw Error(`Game ${code} does not exist!`);
+  }
+
+  if (game.totalPlayers !== game.players.length) {
+    return false;
+  }
+
   return allPlayersInState(code, PlayerStatus.READY);
 }
 
