@@ -1,9 +1,11 @@
-import { Request, Response } from 'express';
-import codeGenerator from '../codeGenerator';
-import { Game, GameRound, GameStatus, GameRoundStatus, Player, PlayerStatus, Events } from '../types';
 import * as gameService from '../services/gameService';
+
+import { Events, Game, GameRound, GameRoundStatus, GameStatus, Player, PlayerStatus } from '../types';
+import { Request, Response } from 'express';
+
 import CAPTIONS_JSON from '../data/captions.json';
 import { ClientNotifier } from '../services/clientNotifier';
+import codeGenerator from '../codeGenerator';
 
 const CAPTIONS_SIZE = CAPTIONS_JSON.length;
 
@@ -110,7 +112,7 @@ export const selectImage = (notifier: ClientNotifier) => (
 
   // TODO: We want this to work on a timer instead.
   if (gameService.allPlayersInState(gameCode, PlayerStatus.SELECTED_GIF)) {
-    gameService.startVote(gameCode);
+    gameService.startPresentation(gameCode);
     notifier.notifyGameClients(gameCode, Events.RoundStateChanged, gameService.getGame(gameCode));
   }
 

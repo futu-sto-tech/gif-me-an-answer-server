@@ -91,9 +91,11 @@ export function selectImage(code: number, playerId: string, imageUrl: string) {
     throw Error(`Game ${code} does not exist!`);
   }
 
-  if (!game.players.some((p) => p.id === playerId)) {
+  const player = game.players.find((p) => p.id === playerId);
+  if (!player) {
     throw Error(`Player ${playerId} not found!`);
   }
+  player.status = PlayerStatus.SELECTED_GIF;
 
   const round = game.rounds.find((r) => r.status === GameRoundStatus.SELECT_GIF);
 
