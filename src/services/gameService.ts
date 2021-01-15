@@ -153,11 +153,11 @@ export function startImageSelection(code: number) {
 }
 
 export function startVote(code: number) {
-  return changeGameRoundStatus(code, GameRoundStatus.SELECT_GIF, GameRoundStatus.VOTE);
+  return changeGameRoundStatus(code, GameRoundStatus.PRESENT, GameRoundStatus.VOTE);
 }
 
 export function startPresentation(code: number) {
-  return changeGameRoundStatus(code, GameRoundStatus.VOTE, GameRoundStatus.PRESENT);
+  return changeGameRoundStatus(code, GameRoundStatus.SELECT_GIF, GameRoundStatus.PRESENT);
 }
 
 export function vote(code: number, playerId: string, imageId: string) {
