@@ -8,10 +8,6 @@ interface GameService {
 
 const GAMES: GameService = {};
 
-export function getGame(code: number) {
-  return GAMES[code];
-}
-
 export function addGame(game: Game) {
   if (game.code in GAMES) {
     throw Error('Game with same code already exists!');
