@@ -8,6 +8,10 @@ interface GameService {
 
 const GAMES: GameService = {};
 
+export function getGame(code: number): Game | undefined {
+  return GAMES[code];
+}
+
 export function addGame(game: Game) {
   if (game.code in GAMES) {
     throw Error('Game with same code already exists!');
@@ -18,6 +22,10 @@ export function addGame(game: Game) {
 
 export function addPlayer(code: number, name: string): Player {
   const game = getGame(code);
+
+  if (!game) {
+    throw Error(`Game ${code} does not exist!`);
+  }
 
   if (game.players.some((p) => p.name === name)) {
     throw Error('Player with this name already exists!');
@@ -52,23 +60,22 @@ export function playerReady(code: number, playerId: string) {
   player.status = PlayerStatus.READY;
 }
 
-function getGame(code: number) {
-  const game = GAMES[code];
+export function allPlayersInState(code: number, state: PlayerStatus) {
+  const game = getGame(code);
 
   if (!game) {
     throw Error(`Game ${code} does not exist!`);
   }
 
-  return game;
-}
-
-export function allPlayersInState(code: number, state: PlayerStatus) {
-  const game = getGame(code);
   return game.players.every((p) => p.status === state);
 }
 
 export function allPlayersReady(code: number) {
   const game = getGame(code);
+
+  if (!game) {
+    throw Error(`Game ${code} does not exist!`);
+  }
 
   if (game.totalPlayers !== game.players.length) {
     return false;
