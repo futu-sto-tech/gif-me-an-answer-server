@@ -1,5 +1,6 @@
-import { v4 as uuidv4 } from 'uuid';
 import { Game, GameRoundStatus, Player, PlayerStatus } from '../types';
+
+import { v4 as uuidv4 } from 'uuid';
 
 interface GameService {
   [code: number]: Game;
@@ -55,17 +56,28 @@ export function playerReady(code: number, playerId: string) {
   player.status = PlayerStatus.READY;
 }
 
-export function allPlayersInState(code: number, state: PlayerStatus) {
+function getGame(code: number) {
   const game = GAMES[code];
 
   if (!game) {
     throw Error(`Game ${code} does not exist!`);
   }
 
+  return game;
+}
+
+export function allPlayersInState(code: number, state: PlayerStatus) {
+  const game = getGame(code);
   return game.players.every((p) => p.status === state);
 }
 
 export function allPlayersReady(code: number) {
+  const game = getGame(code);
+
+  if (game.totalPlayers !== game.players.length) {
+    return false;
+  }
+
   return allPlayersInState(code, PlayerStatus.READY);
 }
 
