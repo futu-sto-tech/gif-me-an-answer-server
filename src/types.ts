@@ -61,4 +61,5 @@ export enum Events {
 
   RoundStarted = 'roundstarted',
   RoundStateChanged = 'roundstatechanged',
+  RoundImagePresented = 'roundimagepresented',
 }

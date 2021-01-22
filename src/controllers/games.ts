@@ -101,6 +101,7 @@ export const selectImage = (notifier: ClientNotifier) => (
   req: Request<{ code: number; order: number }, any, { player: string; url: string }>,
   res: Response
 ) => {
+  const imagePresentationDuration = 10 * 1000;
   const gameCode = Number(req.params.code);
   const { player, url } = req.body;
 
@@ -110,10 +111,27 @@ export const selectImage = (notifier: ClientNotifier) => (
 
   notifier.notifyGameClients(gameCode, Events.PlayerSelectedGif, game);
 
-  // TODO: We want this to work on a timer instead.
   if (gameService.allPlayersInState(gameCode, PlayerStatus.SELECTED_GIF)) {
     gameService.startPresentation(gameCode);
     notifier.notifyGameClients(gameCode, Events.RoundStateChanged, gameService.getGame(gameCode));
+    const round = game?.rounds.find((r) => r.status === GameRoundStatus.PRESENT);
+
+    if (!round) {
+      res.json(game);
+      return;
+    }
+
+    round.images.forEach((image, idx) => {
+      setTimeout(() => {
+        gameService.setPresentedImage(gameCode, image);
+        notifier.notifyGameClients(gameCode, Events.RoundImagePresented, gameService.getGame(gameCode));
+      }, imagePresentationDuration * idx);
+    });
+
+    setTimeout(() => {
+      gameService.startVote(gameCode);
+      notifier.notifyGameClients(gameCode, Events.RoundStateChanged, gameService.getGame(gameCode));
+    }, imagePresentationDuration * round.images.length);
   }
 
   res.json(game);
