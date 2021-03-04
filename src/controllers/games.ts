@@ -101,7 +101,7 @@ export const selectImage = (notifier: ClientNotifier) => (
   req: Request<{ code: number; order: number }, any, { player: string; url: string }>,
   res: Response
 ) => {
-  const imagePresentationDuration = 10 * 1000;
+  const imagePresentationDuration = 5 * 1000;
   const gameCode = Number(req.params.code);
   const { player, url } = req.body;
 
@@ -153,8 +153,14 @@ export const vote = (notifier: ClientNotifier) => (
 
   // TODO: Do we need a timer here as well?
   if (gameService.allPlayersInState(code, PlayerStatus.VOTED)) {
-    gameService.startPresentation(code);
+    gameService.assignPoints(code);
+    gameService.finishRound(code);
     notifier.notifyGameClients(code, Events.RoundStateChanged, gameService.getGame(code));
+
+    setTimeout(() => {
+      gameService.startImageSelection(code);
+      notifier.notifyGameClients(code, Events.RoundStarted, gameService.getGame(code));
+    }, 10 * 1000);
   }
 
   res.json(game);

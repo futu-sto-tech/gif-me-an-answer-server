@@ -160,6 +160,10 @@ export function startPresentation(code: number) {
   return changeGameRoundStatus(code, GameRoundStatus.SELECT_GIF, GameRoundStatus.PRESENT);
 }
 
+export function finishRound(code: number) {
+  return changeGameRoundStatus(code, GameRoundStatus.VOTE, GameRoundStatus.FINSIHED);
+}
+
 export function vote(code: number, playerId: string, imageId: string) {
   const game = GAMES[code];
 
@@ -191,6 +195,27 @@ export function vote(code: number, playerId: string, imageId: string) {
 
   image.votes += 1;
   player.status = PlayerStatus.VOTED;
+}
+
+export function assignPoints(code: number) {
+  const game = GAMES[code];
+
+  if (!game) {
+    throw Error(`Game ${code} does not exist!`);
+  }
+
+  const round = game.rounds.find((item) => item.status === GameRoundStatus.VOTE);
+
+  if (!round) {
+    throw Error(`Game ${code} is not currently in a voting state`);
+  }
+
+  for (const image of round.images) {
+    const player = game.players.find((item) => item.id === image.playerId);
+    if (player) {
+      player.points += image.votes;
+    }
+  }
 }
 
 export function setPresentedImage(code: number, image: Image) {
