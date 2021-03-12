@@ -237,3 +237,11 @@ export function finishGame(code: number) {
     game.status = GameStatus.FINISHED;
   }
 }
+
+export function nextRound(code: number) {
+  const game = getGame(code);
+
+  if (game) {
+    game.currentRound += 1;
+  }
+}

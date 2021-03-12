@@ -8,6 +8,7 @@ export interface Game {
   players: Player[];
   status: GameStatus;
   totalRounds: number;
+  currentRound: number;
   totalPlayers: number;
   rounds: GameRound[];
 }

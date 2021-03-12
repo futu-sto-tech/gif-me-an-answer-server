@@ -48,6 +48,7 @@ export async function createGame(req: Request<{}, any, { rounds: number; players
     players: [],
     status: GameStatus.ACTIVE,
     totalRounds,
+    currentRound: 1,
     totalPlayers,
     rounds: createRounds(totalRounds),
   };
@@ -158,10 +159,13 @@ export const vote = (notifier: ClientNotifier) => (
     notifier.notifyGameClients(code, Events.RoundStateChanged, gameService.getGame(code));
 
     setTimeout(() => {
-      if (gameService.getGame(code)?.rounds.every((r) => r.status === GameRoundStatus.FINSIHED)) {
+      const currentGame = gameService.getGame(code);
+
+      if (currentGame && currentGame.currentRound === currentGame.totalRounds) {
         gameService.finishGame(code);
         notifier.notifyGameClients(code, Events.GameFinished, gameService.getGame(code));
       } else {
+        gameService.nextRound(code);
         gameService.startImageSelection(code);
         notifier.notifyGameClients(code, Events.RoundStarted, gameService.getGame(code));
       }
