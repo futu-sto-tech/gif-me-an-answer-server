@@ -30,7 +30,7 @@ const createRounds = (rounds: number): GameRound[] => {
   const gameRounds = Array(rounds)
     .fill('')
     .map((_n, i) => ({
-      order: i,
+      order: i + 1,
       status: GameRoundStatus.NOT_STARTED,
       caption: captions[i],
       images: [],
