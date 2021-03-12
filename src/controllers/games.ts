@@ -1,6 +1,6 @@
 import * as gameService from '../services/gameService';
 
-import { Events, Game, GameRound, GameRoundStatus, GameStatus, Player, PlayerStatus } from '../types';
+import { Events, Game, GameRound, GameRoundStatus, GameStatus, PlayerStatus } from '../types';
 import { Request, Response } from 'express';
 
 import CAPTIONS_JSON from '../data/captions.json';
@@ -158,8 +158,13 @@ export const vote = (notifier: ClientNotifier) => (
     notifier.notifyGameClients(code, Events.RoundStateChanged, gameService.getGame(code));
 
     setTimeout(() => {
-      gameService.startImageSelection(code);
-      notifier.notifyGameClients(code, Events.RoundStarted, gameService.getGame(code));
+      if (gameService.getGame(code)?.rounds.every((r) => r.status === GameRoundStatus.FINSIHED)) {
+        gameService.finishGame(code);
+        notifier.notifyGameClients(code, Events.GameFinished, gameService.getGame(code));
+      } else {
+        gameService.startImageSelection(code);
+        notifier.notifyGameClients(code, Events.RoundStarted, gameService.getGame(code));
+      }
     }, 10 * 1000);
   }
 

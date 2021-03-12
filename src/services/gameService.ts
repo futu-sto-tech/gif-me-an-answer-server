@@ -1,4 +1,4 @@
-import { Game, GameRoundStatus, Image, Player, PlayerStatus } from '../types';
+import { Game, GameRoundStatus, GameStatus, Image, Player, PlayerStatus } from '../types';
 
 import { v4 as uuidv4 } from 'uuid';
 
@@ -227,5 +227,13 @@ export function setPresentedImage(code: number, image: Image) {
     if (round) {
       round.presentImage = image.url;
     }
+  }
+}
+
+export function finishGame(code: number) {
+  const game = getGame(code);
+
+  if (game) {
+    game.status = GameStatus.FINISHED;
   }
 }

@@ -58,6 +58,7 @@ export enum Events {
   PlayerVoted = 'playervoted',
 
   GameReady = 'gameready',
+  GameFinished = 'gamefinished',
 
   RoundStarted = 'roundstarted',
   RoundStateChanged = 'roundstatechanged',
