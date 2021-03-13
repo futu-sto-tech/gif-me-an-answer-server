@@ -2,6 +2,7 @@ import { Game, GameRound, GameRoundStatus, GameStatus, Image, Player, PlayerStat
 
 import { v4 as uuidv4 } from 'uuid';
 import { isErr, Result as R } from '../utils';
+import { GameDb } from './db';
 
 type GameServiceErrors =
   | 'no-such-game'
@@ -20,9 +21,11 @@ type Result<T, E extends GameServiceErrors> = R<T, E>;
 
 export class GameService {
   private GAMES: { [code: number]: Game };
+  private db: GameDb;
 
-  constructor() {
+  constructor(db: GameDb) {
     this.GAMES = {};
+    this.db = db;
   }
 
   getGame(code: number): Result<Game, 'no-such-game'> {
