@@ -38,4 +38,13 @@ app.use('/api/v1/gifs', GifsRouter());
 
 app.use(errorHandler());
 
+const cleanup = () => {
+  logger.info({ message: 'Server cleanup finished' });
+  process.exit(0);
+};
+
+// Ensures Docker can shutdown the process correctly
+process.on('SIGINT', cleanup);
+process.on('SIGTERM', cleanup);
+
 app.listen(config.PORT, () => logger.info({ message: `Running on ${config.PORT}!` }));
