@@ -14,6 +14,7 @@ import httpContext from 'express-http-context';
 import { requestContext } from './middleware/requestContext';
 import { requestLogger } from './middleware/requestLogger';
 import { ClientNotifier } from './services/clientNotifier';
+import { GameService } from './services/gameService';
 
 const app = express();
 
@@ -32,8 +33,9 @@ app.get('/api-spec', (_req, res) => {
 });
 
 const notifier = new ClientNotifier();
+const gameService = new GameService();
 
-app.use('/api/v1/games', GamesRouter(notifier));
+app.use('/api/v1/games', GamesRouter(notifier, gameService));
 app.use('/api/v1/gifs', GifsRouter());
 
 app.use(errorHandler());

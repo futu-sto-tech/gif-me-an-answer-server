@@ -1,4 +1,4 @@
-import * as gameService from '../services/gameService';
+import { GameService } from '../services/gameService';
 
 import { Events, Game, GameRound, GameRoundStatus, GameStatus, PlayerStatus } from '../types';
 import { Request, Response } from 'express';
@@ -42,7 +42,10 @@ const createRounds = (rounds: number): GameRound[] => {
   return gameRounds;
 };
 
-export async function createGame(req: Request<{}, any, { rounds: number; players: number }>, res: Response) {
+export const createGame = (gameService: GameService) => async (
+  req: Request<{}, any, { rounds: number; players: number }>,
+  res: Response
+) => {
   const totalRounds = Number(req.body.rounds);
   const totalPlayers = Number(req.body.players);
   const newGame: Game = {
@@ -57,9 +60,9 @@ export async function createGame(req: Request<{}, any, { rounds: number; players
   gameService.addGame(newGame);
 
   res.json(newGame);
-}
+};
 
-export function getGame(req: Request, res: Response) {
+export const getGame = (gameService: GameService) => (req: Request, res: Response) => {
   const code = Number(req.params.code);
   const game = gameService.getGame(code);
   if (game) {
@@ -68,9 +71,9 @@ export function getGame(req: Request, res: Response) {
   }
 
   res.sendStatus(404);
-}
+};
 
-export const playerReady = (notifier: ClientNotifier) => (
+export const playerReady = (notifier: ClientNotifier, gameService: GameService) => (
   req: Request<{ code: number }, any, { player: string }>,
   res: Response
 ) => {
@@ -94,7 +97,7 @@ export const playerReady = (notifier: ClientNotifier) => (
   res.sendStatus(200);
 };
 
-export const joinGame = (notifier: ClientNotifier) => (req: Request, res: Response) => {
+export const joinGame = (notifier: ClientNotifier, gameService: GameService) => (req: Request, res: Response) => {
   const code = Number(req.params.code);
   const name = req.body.name;
 
@@ -109,7 +112,7 @@ export const joinGame = (notifier: ClientNotifier) => (req: Request, res: Respon
   res.json(player);
 };
 
-export const selectImage = (notifier: ClientNotifier) => (
+export const selectImage = (notifier: ClientNotifier, gameService: GameService) => (
   req: Request<{ code: number; order: number }, any, { player: string; url: string }>,
   res: Response
 ) => {
@@ -156,7 +159,7 @@ export const selectImage = (notifier: ClientNotifier) => (
   res.json(game);
 };
 
-export const deselectImage = (notifier: ClientNotifier) => (
+export const deselectImage = (notifier: ClientNotifier, gameService: GameService) => (
   req: Request<{ code: number; order: number }, any, { player: string; url: string }>,
   res: Response
 ) => {
@@ -185,7 +188,7 @@ export const deselectImage = (notifier: ClientNotifier) => (
   return res.sendStatus(200);
 };
 
-export const vote = (notifier: ClientNotifier) => (
+export const vote = (notifier: ClientNotifier, gameService: GameService) => (
   req: Request<{ code: string; order: string }, any, { player: string; image: string }>,
   res: Response
 ) => {
@@ -229,7 +232,7 @@ export const vote = (notifier: ClientNotifier) => (
   res.json(gameService.getGame(code));
 };
 
-export const gameEvents = (notifier: ClientNotifier) => (req: Request, res: Response) => {
+export const gameEvents = (notifier: ClientNotifier, gameService: GameService) => (req: Request, res: Response) => {
   const { code } = req.params;
 
   const gameCode = Number(code);
