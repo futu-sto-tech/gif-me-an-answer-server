@@ -6,6 +6,8 @@ import { Request, Response } from 'express';
 import CAPTIONS_JSON from '../data/captions.json';
 import { ClientNotifier } from '../services/clientNotifier';
 import codeGenerator from '../codeGenerator';
+import { isErr } from '../utils';
+import logger from '../logger';
 
 const CAPTIONS_SIZE = CAPTIONS_JSON.length;
 
@@ -75,10 +77,15 @@ export const playerReady = (notifier: ClientNotifier) => (
   const gameCode = Number(req.params.code);
   const playerId = req.body.player;
 
-  gameService.playerReady(gameCode, playerId);
+  const result = gameService.playerReady(gameCode, playerId);
+
+  if (isErr(result)) {
+    return result.error === 'no-such-game' ? res.sendStatus(404) : res.status(400).json({ message: result.error });
+  }
   notifier.notifyGameClients(gameCode, Events.PlayerReady, gameService.getGame(gameCode));
 
-  if (gameService.allPlayersReady(gameCode)) {
+  const allReady = gameService.allPlayersReady(gameCode);
+  if (!isErr(allReady) && allReady) {
     notifier.notifyGameClients(gameCode, Events.GameReady, gameService.getGame(gameCode));
     gameService.startNewRound(gameCode);
     notifier.notifyGameClients(gameCode, Events.RoundStarted, gameService.getGame(gameCode));
@@ -93,6 +100,10 @@ export const joinGame = (notifier: ClientNotifier) => (req: Request, res: Respon
 
   const player = gameService.addPlayer(code, name);
 
+  if (isErr(player)) {
+    return player.error === 'no-such-game' ? res.sendStatus(404) : res.status(400).json({ message: player.error });
+  }
+
   notifier.notifyGameClients(code, Events.PlayerJoined, gameService.getGame(code));
 
   res.json(player);
@@ -106,13 +117,20 @@ export const selectImage = (notifier: ClientNotifier) => (
   const gameCode = Number(req.params.code);
   const { player, url } = req.body;
 
-  gameService.selectImage(gameCode, player, url);
-
+  const result = gameService.selectImage(gameCode, player, url);
   const game = gameService.getGame(gameCode);
+
+  if (isErr(result)) {
+    return result.error === 'no-such-player' ? res.status(400).json({ message: result.error }) : res.sendStatus(404);
+  }
+  if (isErr(game)) {
+    return res.sendStatus(404);
+  }
 
   notifier.notifyGameClients(gameCode, Events.PlayerSelectedGif, game);
 
-  if (gameService.allPlayersInState(gameCode, PlayerStatus.SELECTED_GIF)) {
+  const allSelected = gameService.allPlayersInState(gameCode, PlayerStatus.SELECTED_GIF);
+  if (!isErr(allSelected) && allSelected) {
     gameService.startPresentation(gameCode);
     notifier.notifyGameClients(gameCode, Events.RoundStateChanged, gameService.getGame(gameCode));
     const round = game?.rounds.find((r) => r.status === GameRoundStatus.PRESENT);
@@ -146,11 +164,13 @@ export const vote = (notifier: ClientNotifier) => (
   const playerId = req.body.player;
   const imageId = req.body.image;
 
-  gameService.vote(code, playerId, imageId);
+  const result = gameService.vote(code, playerId, imageId);
 
-  const game = gameService.getGame(code);
+  if (isErr(result)) {
+    return result.error === 'no-such-game' ? res.sendStatus(404) : res.status(400).json({ message: result.error });
+  }
 
-  notifier.notifyGameClients(code, Events.PlayerVoted, game);
+  notifier.notifyGameClients(code, Events.PlayerVoted, gameService.getGame(code));
 
   // TODO: Do we need a timer here as well?
   if (gameService.allPlayersInState(code, PlayerStatus.VOTED)) {
@@ -160,6 +180,11 @@ export const vote = (notifier: ClientNotifier) => (
 
     setTimeout(() => {
       const currentGame = gameService.getGame(code);
+
+      if (isErr(currentGame)) {
+        logger.error({ message: 'Failed to progress after voting', gameCode: code });
+        return;
+      }
 
       if (currentGame && currentGame.currentRound === currentGame.totalRounds) {
         gameService.finishGame(code);
@@ -172,7 +197,7 @@ export const vote = (notifier: ClientNotifier) => (
     }, 10 * 1000);
   }
 
-  res.json(game);
+  res.json(gameService.getGame(code));
 };
 
 export const gameEvents = (notifier: ClientNotifier) => (req: Request, res: Response) => {
@@ -181,7 +206,7 @@ export const gameEvents = (notifier: ClientNotifier) => (req: Request, res: Resp
   const gameCode = Number(code);
   const game = gameService.getGame(gameCode);
 
-  if (!game) {
+  if (isErr(game)) {
     res.status(404).json({ message: `No game exists with code ${gameCode}` });
     return;
   }
