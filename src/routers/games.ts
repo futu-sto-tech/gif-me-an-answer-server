@@ -10,20 +10,19 @@ import {
   deselectImage,
   vote,
 } from './../controllers/games';
-import { ClientNotifier } from '../services/clientNotifier';
-import { GameService } from '../services/gameService';
+import { Services } from '../types';
 
-export default function GamesRouter(notifier: ClientNotifier, gameService: GameService) {
+export default function GamesRouter(services: Services) {
   const router = Router();
-  router.post('/', handlerWrapper(createGame(gameService)));
-  router.get('/:code', handlerWrapper(getGame(gameService)));
-  router.post('/:code/join', handlerWrapper(joinGame(notifier, gameService)));
-  router.post('/:code/ready', handlerWrapper(playerReady(notifier, gameService)));
+  router.post('/', handlerWrapper(createGame(services)));
+  router.get('/:code', handlerWrapper(getGame(services)));
+  router.post('/:code/join', handlerWrapper(joinGame(services)));
+  router.post('/:code/ready', handlerWrapper(playerReady(services)));
   router.post('/:code/rounds/:order/done', NotImplemented);
-  router.post('/:code/rounds/:order/images', handlerWrapper(selectImage(notifier, gameService)));
-  router.post('/:code/rounds/:order/images/deselect', handlerWrapper(deselectImage(notifier, gameService)));
-  router.post('/:code/rounds/:order/vote', handlerWrapper(vote(notifier, gameService)));
-  router.get('/:code/events', handlerWrapper(gameEvents(notifier, gameService)));
+  router.post('/:code/rounds/:order/images', handlerWrapper(selectImage(services)));
+  router.post('/:code/rounds/:order/images/deselect', handlerWrapper(deselectImage(services)));
+  router.post('/:code/rounds/:order/vote', handlerWrapper(vote(services)));
+  router.get('/:code/events', handlerWrapper(gameEvents(services)));
   return router;
 }
 

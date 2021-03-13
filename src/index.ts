@@ -15,6 +15,7 @@ import { requestContext } from './middleware/requestContext';
 import { requestLogger } from './middleware/requestLogger';
 import { ClientNotifier } from './services/clientNotifier';
 import { GameService } from './services/gameService';
+import { Services } from './types';
 
 const app = express();
 
@@ -32,10 +33,12 @@ app.get('/api-spec', (_req, res) => {
   res.sendFile(path.resolve(__dirname, './api-spec.yaml'));
 });
 
-const notifier = new ClientNotifier();
-const gameService = new GameService();
+const services: Services = {
+  notifier: new ClientNotifier(),
+  gameService: new GameService(),
+};
 
-app.use('/api/v1/games', GamesRouter(notifier, gameService));
+app.use('/api/v1/games', GamesRouter(services));
 app.use('/api/v1/gifs', GifsRouter());
 
 app.use(errorHandler());
