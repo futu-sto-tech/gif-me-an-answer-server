@@ -1,4 +1,4 @@
-import { Game, GameRoundStatus, GameStatus, Image, Player, PlayerStatus } from '../types';
+import { Game, GameRound, GameRoundStatus, GameStatus, Image, Player, PlayerStatus } from '../types';
 
 import { v4 as uuidv4 } from 'uuid';
 import { isErr, Result as R } from '../utils';
@@ -286,4 +286,45 @@ export function nextRound(code: number): Result<void, 'no-such-game' | 'no-such-
   }
 
   maybeGame.currentRound += 1;
+}
+
+export function getRound(code: number, roundNumber: number): Result<GameRound, 'no-such-game' | 'no-such-round'> {
+  const maybeGame = getGame(code);
+
+  if (isErr(maybeGame)) {
+    return maybeGame;
+  }
+
+  const round = maybeGame.rounds.find((r) => r.order === roundNumber);
+
+  if (!round) {
+    return { error: 'no-such-round' };
+  }
+
+  return round;
+}
+
+export function deselectImage(
+  code: number,
+  roundNumber: number,
+  playerId: string,
+  imageUrl: string
+): Result<void, 'no-such-game' | 'no-such-round' | 'no-such-image' | 'bad-round-state'> {
+  const round = getRound(code, roundNumber);
+
+  if (isErr(round)) {
+    return round;
+  }
+
+  if (round.status !== GameRoundStatus.SELECT_GIF) {
+    return { error: 'bad-round-state' };
+  }
+
+  const image = round.images.find((item) => item.playerId === playerId);
+
+  if (!image || image.url !== imageUrl) {
+    return { error: 'no-such-image' };
+  }
+
+  round.images = round.images.filter(({ id }) => id !== image.id);
 }

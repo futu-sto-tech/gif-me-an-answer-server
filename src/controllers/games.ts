@@ -156,6 +156,35 @@ export const selectImage = (notifier: ClientNotifier) => (
   res.json(game);
 };
 
+export const deselectImage = (notifier: ClientNotifier) => (
+  req: Request<{ code: number; order: number }, any, { player: string; url: string }>,
+  res: Response
+) => {
+  const gameCode = Number(req.params.code);
+  const roundNumber = Number(req.params.order);
+  const { player, url } = req.body;
+
+  const result = gameService.deselectImage(gameCode, roundNumber, player, url);
+
+  if (isErr(result)) {
+    switch (result.error) {
+      case 'no-such-game':
+      case 'no-such-round':
+        return res.sendStatus(404);
+      case 'no-such-image':
+        return res.status(400).json({ message: `No matching image`, player, url });
+      case 'bad-round-state':
+        return res.sendStatus(500);
+      default:
+        throw new Error(`Unhandled error state when deselecting image: ${result.error}`);
+    }
+  }
+
+  notifier.notifyGameClients(gameCode, Events.PlayerDeselectedGif, gameService.getGame(gameCode));
+
+  return res.sendStatus(200);
+};
+
 export const vote = (notifier: ClientNotifier) => (
   req: Request<{ code: string; order: string }, any, { player: string; image: string }>,
   res: Response
