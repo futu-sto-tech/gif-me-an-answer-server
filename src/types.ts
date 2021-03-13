@@ -56,6 +56,7 @@ export enum Events {
   PlayerJoined = 'playerjoined',
   PlayerReady = 'playerready',
   PlayerSelectedGif = 'playerselectedgif',
+  PlayerDeselectedGif = 'playerdeselectedgif',
   PlayerVoted = 'playervoted',
 
   GameReady = 'gameready',
