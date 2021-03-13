@@ -1,6 +1,22 @@
 import { Game, GameRoundStatus, GameStatus, Image, Player, PlayerStatus } from '../types';
 
 import { v4 as uuidv4 } from 'uuid';
+import { isErr, Result as R } from '../utils';
+
+type GameServiceErrors =
+  | 'no-such-game'
+  | 'no-such-player'
+  | 'no-such-round'
+  | 'no-such-image'
+  | 'game-exists'
+  | 'player-exists'
+  | 'in-active-round'
+  | 'no-remaining-rounds'
+  | 'bad-round-state'
+  | 'own-image'
+  | 'already-voted';
+
+type Result<T, E extends GameServiceErrors> = R<T, E>;
 
 interface GameService {
   [code: number]: Game;
@@ -8,27 +24,29 @@ interface GameService {
 
 const GAMES: GameService = {};
 
-export function getGame(code: number): Game | undefined {
-  return GAMES[code];
+export function getGame(code: number): Result<Game, 'no-such-game'> {
+  const game = GAMES[code];
+
+  return game ? game : { error: 'no-such-game' };
 }
 
-export function addGame(game: Game) {
+export function addGame(game: Game): Result<void, 'game-exists'> {
   if (game.code in GAMES) {
-    throw Error('Game with same code already exists!');
+    return { error: 'game-exists' };
   }
 
   GAMES[game.code] = game;
 }
 
-export function addPlayer(code: number, name: string): Player {
-  const game = getGame(code);
+export function addPlayer(code: number, name: string): Result<Player, 'no-such-game' | 'player-exists'> {
+  const maybeGame = getGame(code);
 
-  if (!game) {
-    throw Error(`Game ${code} does not exist!`);
+  if (isErr(maybeGame)) {
+    return maybeGame;
   }
 
-  if (game.players.some((p) => p.name === name)) {
-    throw Error('Player with this name already exists!');
+  if (maybeGame.players.some((p) => p.name === name)) {
+    return { error: 'player-exists' };
   }
 
   const player: Player = {
@@ -38,69 +56,73 @@ export function addPlayer(code: number, name: string): Player {
     points: 0,
   };
 
-  const players = [...game.players, player];
-  GAMES[code] = { ...game, players };
+  const players = [...maybeGame.players, player];
+  GAMES[code] = { ...maybeGame, players };
 
   return player;
 }
 
-export function playerReady(code: number, playerId: string) {
-  const game = GAMES[code];
+export function playerReady(code: number, playerId: string): Result<void, 'no-such-game' | 'no-such-player'> {
+  const maybeGame = getGame(code);
 
-  if (!game) {
-    throw Error(`Game ${code} does not exist!`);
+  if (isErr(maybeGame)) {
+    return maybeGame;
   }
 
-  const player = game.players.find((p) => p.id === playerId);
+  const player = maybeGame.players.find((p) => p.id === playerId);
 
   if (!player) {
-    throw Error(`Player ${playerId} not found!`);
+    return { error: 'no-such-player' };
   }
 
   player.status = PlayerStatus.READY;
 }
 
-export function allPlayersInState(code: number, state: PlayerStatus) {
-  const game = getGame(code);
+export function allPlayersInState(code: number, state: PlayerStatus): Result<boolean, 'no-such-game'> {
+  const maybeGame = getGame(code);
 
-  if (!game) {
-    throw Error(`Game ${code} does not exist!`);
+  if (isErr(maybeGame)) {
+    return maybeGame;
   }
 
-  return game.players.every((p) => p.status === state);
+  return maybeGame.players.every((p) => p.status === state);
 }
 
-export function allPlayersReady(code: number) {
-  const game = getGame(code);
+export function allPlayersReady(code: number): Result<boolean, 'no-such-game'> {
+  const maybeGame = getGame(code);
 
-  if (!game) {
-    throw Error(`Game ${code} does not exist!`);
+  if (isErr(maybeGame)) {
+    return maybeGame;
   }
 
-  if (game.totalPlayers !== game.players.length) {
+  if (maybeGame.totalPlayers !== maybeGame.players.length) {
     return false;
   }
 
   return allPlayersInState(code, PlayerStatus.READY);
 }
 
-export function selectImage(code: number, playerId: string, imageUrl: string) {
-  const game = GAMES[code];
+export function selectImage(
+  code: number,
+  playerId: string,
+  imageUrl: string
+): Result<void, 'no-such-game' | 'no-such-round' | 'no-such-player'> {
+  const maybeGame = getGame(code);
 
-  if (!game) {
-    throw Error(`Game ${code} does not exist!`);
+  if (isErr(maybeGame)) {
+    return maybeGame;
   }
 
-  const player = game.players.find((p) => p.id === playerId);
+  const player = maybeGame.players.find((p) => p.id === playerId);
   if (!player) {
-    throw Error(`Player ${playerId} not found!`);
+    return { error: 'no-such-player' };
   }
   player.status = PlayerStatus.SELECTED_GIF;
 
-  const round = game.rounds.find((r) => r.status === GameRoundStatus.SELECT_GIF);
+  const round = maybeGame.rounds.find((r) => r.status === GameRoundStatus.SELECT_GIF);
 
   if (!round) {
-    throw Error('Did not find a matching round');
+    return { error: 'no-such-round' };
   }
 
   round.images = round.images
@@ -113,36 +135,37 @@ export function selectImage(code: number, playerId: string, imageUrl: string) {
     });
 }
 
-export function startNewRound(code: number) {
-  const game = GAMES[code];
+export function startNewRound(code: number): Result<void, 'no-such-game' | 'in-active-round' | 'no-remaining-rounds'> {
+  const maybeGame = getGame(code);
 
-  if (!game) {
-    throw Error(`Game ${code} does not exist!`);
+  if (isErr(maybeGame)) {
+    return maybeGame;
   }
-
-  const noRemainingRounds = !game.rounds.some((r) => r.status === GameRoundStatus.NOT_STARTED);
-  const inActiveRound = game.rounds.some(
-    (r) => ![GameRoundStatus.NOT_STARTED, GameRoundStatus.FINSIHED].includes(r.status)
-  );
-
-  if (noRemainingRounds || inActiveRound) {
-    return;
+  if (!maybeGame.rounds.some((r) => r.status === GameRoundStatus.NOT_STARTED)) {
+    return { error: 'no-remaining-rounds' };
+  }
+  if (maybeGame.rounds.some((r) => ![GameRoundStatus.NOT_STARTED, GameRoundStatus.FINSIHED].includes(r.status))) {
+    return { error: 'in-active-round' };
   }
 
   startImageSelection(code);
 }
 
-function changeGameRoundStatus(code: number, from: GameRoundStatus, to: GameRoundStatus) {
-  const game = GAMES[code];
+function changeGameRoundStatus(
+  code: number,
+  from: GameRoundStatus,
+  to: GameRoundStatus
+): Result<void, 'no-such-game' | 'bad-round-state'> {
+  const maybeGame = getGame(code);
 
-  if (!game) {
-    throw Error(`Game ${code} does not exist!`);
+  if (isErr(maybeGame)) {
+    return maybeGame;
   }
 
-  const round = game.rounds.find((r) => r.status === from);
+  const round = maybeGame.rounds.find((r) => r.status === from);
 
   if (!round) {
-    throw Error(`Game ${code} is not currently in state ${from}`);
+    return { error: 'bad-round-state' };
   }
 
   round.status = to;
@@ -164,84 +187,103 @@ export function finishRound(code: number) {
   return changeGameRoundStatus(code, GameRoundStatus.VOTE, GameRoundStatus.FINSIHED);
 }
 
-export function vote(code: number, playerId: string, imageId: string) {
-  const game = GAMES[code];
+export function vote(
+  code: number,
+  playerId: string,
+  imageId: string
+): Result<
+  void,
+  'no-such-game' | 'bad-round-state' | 'no-such-image' | 'no-such-player' | 'own-image' | 'already-voted'
+> {
+  const maybeGame = getGame(code);
 
-  if (!game) {
-    throw Error(`Game ${code} does not exist!`);
+  if (isErr(maybeGame)) {
+    return maybeGame;
   }
 
-  const round = game.rounds.find((r) => r.status === GameRoundStatus.VOTE);
+  const round = maybeGame.rounds.find((r) => r.status === GameRoundStatus.VOTE);
 
   if (!round) {
-    throw Error(`Game ${code} is not currently in a voting state`);
+    return { error: 'bad-round-state' };
   }
 
   const image = round.images.find((img) => img.id === imageId);
-  const player = game.players.find((p) => p.id === playerId);
+  const player = maybeGame.players.find((p) => p.id === playerId);
 
   if (!image) {
-    throw Error(`No image with id ${imageId}`);
+    return { error: 'no-such-image' };
   }
   if (!player) {
-    throw Error(`No player with id ${playerId}`);
+    return { error: 'no-such-player' };
   }
   if (player.status === PlayerStatus.VOTED) {
-    throw Error(`Player ${playerId} already voted`);
+    return { error: 'already-voted' };
   }
   if (image.playerId === playerId) {
-    throw Error(`Not allowed to vote on your own image`);
+    return { error: 'own-image' };
   }
 
   image.votes += 1;
   player.status = PlayerStatus.VOTED;
 }
 
-export function assignPoints(code: number) {
-  const game = GAMES[code];
+export function assignPoints(code: number): Result<void, 'no-such-game' | 'bad-round-state'> {
+  const maybeGame = getGame(code);
 
-  if (!game) {
-    throw Error(`Game ${code} does not exist!`);
+  if (isErr(maybeGame)) {
+    return maybeGame;
   }
 
-  const round = game.rounds.find((item) => item.status === GameRoundStatus.VOTE);
+  const round = maybeGame.rounds.find((item) => item.status === GameRoundStatus.VOTE);
 
   if (!round) {
-    throw Error(`Game ${code} is not currently in a voting state`);
+    return { error: 'bad-round-state' };
   }
 
   for (const image of round.images) {
-    const player = game.players.find((item) => item.id === image.playerId);
+    const player = maybeGame.players.find((item) => item.id === image.playerId);
     if (player) {
       player.points += image.votes;
     }
   }
 }
 
-export function setPresentedImage(code: number, image: Image) {
-  const game = getGame(code);
+export function setPresentedImage(code: number, image: Image): Result<void, 'no-such-game' | 'bad-round-state'> {
+  const maybeGame = getGame(code);
 
-  if (game) {
-    const round = game.rounds.find((r) => r.status === GameRoundStatus.PRESENT);
-
-    if (round) {
-      round.presentImage = image.url;
-    }
+  if (isErr(maybeGame)) {
+    return maybeGame;
   }
+
+  const round = maybeGame.rounds.find((r) => r.status === GameRoundStatus.PRESENT);
+
+  if (!round) {
+    return { error: 'bad-round-state' };
+  }
+
+  round.presentImage = image.url;
 }
 
-export function finishGame(code: number) {
-  const game = getGame(code);
+export function finishGame(code: number): Result<void, 'no-such-game'> {
+  const maybeGame = getGame(code);
 
-  if (game) {
-    game.status = GameStatus.FINISHED;
+  if (isErr(maybeGame)) {
+    return maybeGame;
   }
+
+  maybeGame.status = GameStatus.FINISHED;
 }
 
-export function nextRound(code: number) {
-  const game = getGame(code);
+export function nextRound(code: number): Result<void, 'no-such-game' | 'no-such-round'> {
+  const maybeGame = getGame(code);
 
-  if (game) {
-    game.currentRound += 1;
+  if (isErr(maybeGame)) {
+    return maybeGame;
   }
+
+  if (maybeGame.currentRound >= maybeGame.totalRounds) {
+    return { error: 'no-such-round' };
+  }
+
+  maybeGame.currentRound += 1;
 }
