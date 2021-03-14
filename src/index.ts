@@ -16,7 +16,7 @@ import { requestLogger } from './middleware/requestLogger';
 import { ClientNotifier } from './services/clientNotifier';
 import { GameService } from './services/gameService';
 import { Services } from './types';
-import { InMemoryGameDb } from './services/db';
+import { InMemoryGameDb, RedisGameDb } from './services/db';
 
 const app = express();
 
@@ -34,9 +34,11 @@ app.get('/api-spec', (_req, res) => {
   res.sendFile(path.resolve(__dirname, './api-spec.yaml'));
 });
 
+const db = config.REDIS_URL ? new RedisGameDb() : new InMemoryGameDb();
+
 const services: Services = {
   notifier: new ClientNotifier(),
-  gameService: new GameService(new InMemoryGameDb()),
+  gameService: new GameService(db),
 };
 
 app.use('/api/v1/games', GamesRouter(services));

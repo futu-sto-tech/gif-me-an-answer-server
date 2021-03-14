@@ -1,5 +1,6 @@
 import redis, { RedisClient } from 'redis';
 import config from '../config';
+import logger from '../logger';
 import { Game } from '../types';
 
 export interface GameDb {
@@ -12,6 +13,7 @@ export class InMemoryGameDb implements GameDb {
   private games: { [code: number]: Game };
 
   constructor() {
+    logger.info({ message: 'Initializing InMemoryGameDb...' });
     this.games = {};
   }
 
@@ -41,6 +43,7 @@ export class RedisGameDb implements GameDb {
   private gameTtlSec = 30 * 60;
 
   constructor() {
+    logger.info({ message: 'Initilizing RedisGameDb...' });
     this.client = redis.createClient(config.REDIS_URL);
   }
 
