@@ -44,7 +44,7 @@ export class ClientNotifier {
     });
   }
 
-  notifyGameClients<T>(gameCode: number, eventName: Events, data: T) {
+  notifyGameClients<T>(gameCode: number, eventName: Events, data: Exclude<T, Promise<any>>) {
     const players = this.clients.filter((c) => c.gameCode === gameCode);
 
     const payload = {

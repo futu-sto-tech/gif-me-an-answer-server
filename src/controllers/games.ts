@@ -151,7 +151,7 @@ export const selectImage = ({ notifier, gameService }: Services) => async (
     });
 
     setTimeout(async () => {
-      const g = gameService.startVote(gameCode);
+      const g = await gameService.startVote(gameCode);
       notifier.notifyGameClients(gameCode, Events.RoundStateChanged, g);
     }, imagePresentationDuration * round.images.length);
   }
