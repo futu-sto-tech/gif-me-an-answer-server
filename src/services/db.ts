@@ -2,7 +2,32 @@ import redis, { RedisClient } from 'redis';
 import config from '../config';
 import { Game } from '../types';
 
-export class GameDb {
+export interface GameDb {
+  getGame(code: number): Promise<Game | null>;
+  setGame(game: Game): Promise<void>;
+}
+
+export class InMemoryGameDb implements GameDb {
+  private games: { [code: number]: Game };
+
+  constructor() {
+    this.games = {};
+  }
+
+  getGame(code: number) {
+    const game = this.games[code];
+
+    return Promise.resolve(game ? game : null);
+  }
+
+  setGame(game: Game) {
+    this.games[game.code] = game;
+
+    return Promise.resolve();
+  }
+}
+
+export class RedisGameDb implements GameDb {
   private client: RedisClient;
   private prefix = 'gmaa-game';
   private gameTtlSec = 30 * 60;

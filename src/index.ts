@@ -16,7 +16,7 @@ import { requestLogger } from './middleware/requestLogger';
 import { ClientNotifier } from './services/clientNotifier';
 import { GameService } from './services/gameService';
 import { Services } from './types';
-import { GameDb } from './services/db';
+import { InMemoryGameDb } from './services/db';
 
 const app = express();
 
@@ -36,7 +36,7 @@ app.get('/api-spec', (_req, res) => {
 
 const services: Services = {
   notifier: new ClientNotifier(),
-  gameService: new GameService(new GameDb()),
+  gameService: new GameService(new InMemoryGameDb()),
 };
 
 app.use('/api/v1/games', GamesRouter(services));
