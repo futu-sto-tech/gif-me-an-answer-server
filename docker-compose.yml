@@ -1,4 +1,4 @@
-version: '3.4'
+version: '3.8'
 
 networks:
   gmaa-server-network:
@@ -18,6 +18,7 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
+      target: app
     depends_on:
       - redis_db
     ports:
@@ -27,3 +28,16 @@ services:
       GIPHY_URL: ${GIPHY_URL}
       GIPHY_TOKEN: ${GIPHY_TOKEN}
       REDIS_URL: 'redis://redis_db'
+
+  e2e_test:
+    networks:
+      - gmaa-server-network
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      target: test
+    depends_on:
+      - app
+    environment:
+      APP_URL: 'http://app:8000/api/v1'
+    entrypoint: [ './node_modules/.bin/ts-node', '/app/test/e2e-test.ts' ]

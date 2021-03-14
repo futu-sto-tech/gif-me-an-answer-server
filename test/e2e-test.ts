@@ -2,27 +2,27 @@ import axios from 'axios';
 import { assert } from 'console';
 import EventSource from 'eventsource';
 
-const BASE_URL = process.argv[2] || 'http://localhost:8000/api/v1';
+const BASE_URL = process.env.APP_URL || 'http://localhost:8000/api/v1';
 
 const sleep = (seconds: number) => new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 
 const image1 = 'https://gifs.com/image1';
 const image2 = 'https://gifs.com/image2';
 
-const player1 = axios.create({
-  baseURL: BASE_URL,
-});
-const player2 = axios.create({
-  baseURL: BASE_URL,
-});
-
 (async function runTest() {
   console.log(`Running E2E test against ${BASE_URL}...`);
-  console.log('The test will take approx 1 minute to finish');
+  console.log('A successful test will take approx 1 minute to finish');
 
-  await sleep(2);
+  await sleep(3);
 
   try {
+    const player1 = axios.create({
+      baseURL: BASE_URL,
+    });
+    const player2 = axios.create({
+      baseURL: BASE_URL,
+    });
+
     const collectedEvents: { event: string; data: any }[] = [];
     const {
       data: { code },
@@ -35,7 +35,7 @@ const player2 = axios.create({
     events.addEventListener('message', (e: any) => {
       const event = JSON.parse(e.data);
 
-      if (event?.data?.error) {
+      if (event.data?.error || (event.data && Object.keys(event.data).length === 0)) {
         console.error(event);
         process.exit(1);
       } else {

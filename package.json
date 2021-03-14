@@ -7,7 +7,8 @@
     "start": "node dist/index.js",
     "dev": "nodemon --exec ts-node src/index.ts",
     "build": "./build.sh",
-    "test": "mocha -r ts-node/register test/*.ts"
+    "test": "mocha -r ts-node/register test/*.ts",
+    "test:e2e": "docker-compose up --build --abort-on-container-exit e2e_test; docker-compose down --volumes --remove-orphans"
   },
   "repository": {
     "type": "git",

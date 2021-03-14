@@ -15,9 +15,13 @@ COPY ./tsconfig.json ./
 COPY ./build.sh ./
 RUN npm run build && npm prune --production
 
+FROM deps AS test
+WORKDIR $WORKDIR
+COPY ./test ./test
+COPY ./tsconfig.json ./
+
 FROM base AS app
 WORKDIR $WORKDIR
 COPY --from=build $WORKDIR/node_modules ./node_modules
 COPY --from=build $WORKDIR/dist ./dist
-
 CMD [ "node", "dist/index.js" ]
