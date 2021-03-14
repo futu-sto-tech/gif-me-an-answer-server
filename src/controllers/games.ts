@@ -126,7 +126,7 @@ export const selectImage = ({ notifier, gameService }: Services) => async (
 
   notifier.notifyGameClients(gameCode, Events.PlayerSelectedGif, maybeGame);
 
-  const allSelected = gameService.allPlayersInState(gameCode, PlayerStatus.SELECTED_GIF);
+  const allSelected = await gameService.allPlayersInState(gameCode, PlayerStatus.SELECTED_GIF);
   if (!isErr(allSelected) && allSelected) {
     const game = await gameService.startPresentation(gameCode);
 
