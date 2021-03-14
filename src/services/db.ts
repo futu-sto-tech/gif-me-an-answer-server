@@ -4,7 +4,8 @@ import { Game } from '../types';
 
 export interface GameDb {
   getGame(code: number): Promise<Game | null>;
-  setGame(game: Game): Promise<void>;
+  setGame(game: Game): Promise<Game>;
+  exists(code: number): Promise<boolean>;
 }
 
 export class InMemoryGameDb implements GameDb {
@@ -23,7 +24,13 @@ export class InMemoryGameDb implements GameDb {
   setGame(game: Game) {
     this.games[game.code] = game;
 
-    return Promise.resolve();
+    return Promise.resolve(game);
+  }
+
+  exists(code: number) {
+    const exists = code in this.games;
+
+    return Promise.resolve(exists);
   }
 }
 
@@ -52,14 +59,26 @@ export class RedisGameDb implements GameDb {
     });
   }
 
-  setGame(game: Game): Promise<void> {
+  setGame(game: Game): Promise<Game> {
     return new Promise((resolve, reject) => {
       this.client.set(`${this.prefix}:${game.code}`, JSON.stringify(game), 'EX', this.gameTtlSec, (err, _result) => {
         if (err) {
           return reject(err);
         }
 
-        resolve();
+        resolve(game);
+      });
+    });
+  }
+
+  exists(code: number): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      this.client.exists(`${this.prefix}:${code}`, (err, result) => {
+        if (err) {
+          return reject(err);
+        }
+
+        resolve(result === 1);
       });
     });
   }

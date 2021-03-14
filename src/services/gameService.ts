@@ -20,30 +20,28 @@ type GameServiceErrors =
 type Result<T, E extends GameServiceErrors> = R<T, E>;
 
 export class GameService {
-  private GAMES: { [code: number]: Game };
   private db: GameDb;
 
   constructor(db: GameDb) {
-    this.GAMES = {};
     this.db = db;
   }
 
-  getGame(code: number): Result<Game, 'no-such-game'> {
-    const game = this.GAMES[code];
+  async getGame(code: number): Promise<Result<Game, 'no-such-game'>> {
+    const game = await this.db.getGame(code);
 
     return game ? game : { error: 'no-such-game' };
   }
 
-  addGame(game: Game): Result<void, 'game-exists'> {
-    if (game.code in this.GAMES) {
+  async addGame(game: Game): Promise<Result<Game, 'game-exists'>> {
+    if (await this.db.exists(game.code)) {
       return { error: 'game-exists' };
     }
 
-    this.GAMES[game.code] = game;
+    return this.db.setGame(game);
   }
 
-  addPlayer(code: number, name: string): Result<Player, 'no-such-game' | 'player-exists'> {
-    const maybeGame = this.getGame(code);
+  async addPlayer(code: number, name: string): Promise<Result<Player, 'no-such-game' | 'player-exists'>> {
+    const maybeGame = await this.getGame(code);
 
     if (isErr(maybeGame)) {
       return maybeGame;
@@ -61,13 +59,14 @@ export class GameService {
     };
 
     const players = [...maybeGame.players, player];
-    this.GAMES[code] = { ...maybeGame, players };
+
+    this.db.setGame({ ...maybeGame, players });
 
     return player;
   }
 
-  playerReady(code: number, playerId: string): Result<void, 'no-such-game' | 'no-such-player'> {
-    const maybeGame = this.getGame(code);
+  async playerReady(code: number, playerId: string): Promise<Result<Game, 'no-such-game' | 'no-such-player'>> {
+    const maybeGame = await this.getGame(code);
 
     if (isErr(maybeGame)) {
       return maybeGame;
@@ -80,10 +79,12 @@ export class GameService {
     }
 
     player.status = PlayerStatus.READY;
+
+    return this.db.setGame(maybeGame);
   }
 
-  allPlayersInState(code: number, state: PlayerStatus): Result<boolean, 'no-such-game'> {
-    const maybeGame = this.getGame(code);
+  async allPlayersInState(code: number, state: PlayerStatus): Promise<Result<boolean, 'no-such-game'>> {
+    const maybeGame = await this.getGame(code);
 
     if (isErr(maybeGame)) {
       return maybeGame;
@@ -92,8 +93,8 @@ export class GameService {
     return maybeGame.players.every((p) => p.status === state);
   }
 
-  allPlayersReady(code: number): Result<boolean, 'no-such-game'> {
-    const maybeGame = this.getGame(code);
+  async allPlayersReady(code: number): Promise<Result<boolean, 'no-such-game'>> {
+    const maybeGame = await this.getGame(code);
 
     if (isErr(maybeGame)) {
       return maybeGame;
@@ -106,12 +107,12 @@ export class GameService {
     return this.allPlayersInState(code, PlayerStatus.READY);
   }
 
-  selectImage(
+  async selectImage(
     code: number,
     playerId: string,
     imageUrl: string
-  ): Result<void, 'no-such-game' | 'no-such-round' | 'no-such-player'> {
-    const maybeGame = this.getGame(code);
+  ): Promise<Result<Game, 'no-such-game' | 'no-such-round' | 'no-such-player'>> {
+    const maybeGame = await this.getGame(code);
 
     if (isErr(maybeGame)) {
       return maybeGame;
@@ -137,10 +138,14 @@ export class GameService {
         playerId,
         votes: 0,
       });
+
+    return this.db.setGame(maybeGame);
   }
 
-  startNewRound(code: number): Result<void, 'no-such-game' | 'in-active-round' | 'no-remaining-rounds'> {
-    const maybeGame = this.getGame(code);
+  async startNewRound(
+    code: number
+  ): Promise<Result<Game, 'no-such-game' | 'in-active-round' | 'no-remaining-rounds' | 'bad-round-state'>> {
+    const maybeGame = await this.getGame(code);
 
     if (isErr(maybeGame)) {
       return maybeGame;
@@ -152,15 +157,15 @@ export class GameService {
       return { error: 'in-active-round' };
     }
 
-    this.startImageSelection(code);
+    return this.startImageSelection(code);
   }
 
-  private changeGameRoundStatus(
+  private async changeGameRoundStatus(
     code: number,
     from: GameRoundStatus,
     to: GameRoundStatus
-  ): Result<void, 'no-such-game' | 'bad-round-state'> {
-    const maybeGame = this.getGame(code);
+  ): Promise<Result<Game, 'no-such-game' | 'bad-round-state'>> {
+    const maybeGame = await this.getGame(code);
 
     if (isErr(maybeGame)) {
       return maybeGame;
@@ -173,33 +178,37 @@ export class GameService {
     }
 
     round.status = to;
+
+    return this.db.setGame(maybeGame);
   }
 
-  startImageSelection(code: number) {
+  async startImageSelection(code: number) {
     return this.changeGameRoundStatus(code, GameRoundStatus.NOT_STARTED, GameRoundStatus.SELECT_GIF);
   }
 
-  startVote(code: number) {
+  async startVote(code: number) {
     return this.changeGameRoundStatus(code, GameRoundStatus.PRESENT, GameRoundStatus.VOTE);
   }
 
-  startPresentation(code: number) {
+  async startPresentation(code: number) {
     return this.changeGameRoundStatus(code, GameRoundStatus.SELECT_GIF, GameRoundStatus.PRESENT);
   }
 
-  finishRound(code: number) {
+  async finishRound(code: number) {
     return this.changeGameRoundStatus(code, GameRoundStatus.VOTE, GameRoundStatus.FINSIHED);
   }
 
-  vote(
+  async vote(
     code: number,
     playerId: string,
     imageId: string
-  ): Result<
-    void,
-    'no-such-game' | 'bad-round-state' | 'no-such-image' | 'no-such-player' | 'own-image' | 'already-voted'
+  ): Promise<
+    Result<
+      Game,
+      'no-such-game' | 'bad-round-state' | 'no-such-image' | 'no-such-player' | 'own-image' | 'already-voted'
+    >
   > {
-    const maybeGame = this.getGame(code);
+    const maybeGame = await this.getGame(code);
 
     if (isErr(maybeGame)) {
       return maybeGame;
@@ -229,10 +238,12 @@ export class GameService {
 
     image.votes += 1;
     player.status = PlayerStatus.VOTED;
+
+    return this.db.setGame(maybeGame);
   }
 
-  assignPoints(code: number): Result<void, 'no-such-game' | 'bad-round-state'> {
-    const maybeGame = this.getGame(code);
+  async assignPoints(code: number): Promise<Result<Game, 'no-such-game' | 'bad-round-state'>> {
+    const maybeGame = await this.getGame(code);
 
     if (isErr(maybeGame)) {
       return maybeGame;
@@ -250,10 +261,12 @@ export class GameService {
         player.points += image.votes;
       }
     }
+
+    return this.db.setGame(maybeGame);
   }
 
-  setPresentedImage(code: number, image: Image): Result<void, 'no-such-game' | 'bad-round-state'> {
-    const maybeGame = this.getGame(code);
+  async setPresentedImage(code: number, image: Image): Promise<Result<Game, 'no-such-game' | 'bad-round-state'>> {
+    const maybeGame = await this.getGame(code);
 
     if (isErr(maybeGame)) {
       return maybeGame;
@@ -266,20 +279,24 @@ export class GameService {
     }
 
     round.presentImage = image.url;
+
+    return this.db.setGame(maybeGame);
   }
 
-  finishGame(code: number): Result<void, 'no-such-game'> {
-    const maybeGame = this.getGame(code);
+  async finishGame(code: number): Promise<Result<Game, 'no-such-game'>> {
+    const maybeGame = await this.getGame(code);
 
     if (isErr(maybeGame)) {
       return maybeGame;
     }
 
     maybeGame.status = GameStatus.FINISHED;
+
+    return this.db.setGame(maybeGame);
   }
 
-  nextRound(code: number): Result<void, 'no-such-game' | 'no-such-round'> {
-    const maybeGame = this.getGame(code);
+  async nextRound(code: number): Promise<Result<Game, 'no-such-game' | 'no-such-round'>> {
+    const maybeGame = await this.getGame(code);
 
     if (isErr(maybeGame)) {
       return maybeGame;
@@ -290,10 +307,17 @@ export class GameService {
     }
 
     maybeGame.currentRound += 1;
+
+    return this.db.setGame(maybeGame);
   }
 
-  getRound(code: number, roundNumber: number): Result<GameRound, 'no-such-game' | 'no-such-round'> {
-    const maybeGame = this.getGame(code);
+  async deselectImage(
+    code: number,
+    roundNumber: number,
+    playerId: string,
+    imageUrl: string
+  ): Promise<Result<Game, 'no-such-game' | 'no-such-round' | 'no-such-image' | 'bad-round-state'>> {
+    const maybeGame = await this.getGame(code);
 
     if (isErr(maybeGame)) {
       return maybeGame;
@@ -303,21 +327,6 @@ export class GameService {
 
     if (!round) {
       return { error: 'no-such-round' };
-    }
-
-    return round;
-  }
-
-  deselectImage(
-    code: number,
-    roundNumber: number,
-    playerId: string,
-    imageUrl: string
-  ): Result<void, 'no-such-game' | 'no-such-round' | 'no-such-image' | 'bad-round-state'> {
-    const round = this.getRound(code, roundNumber);
-
-    if (isErr(round)) {
-      return round;
     }
 
     if (round.status !== GameRoundStatus.SELECT_GIF) {
@@ -331,5 +340,7 @@ export class GameService {
     }
 
     round.images = round.images.filter(({ id }) => id !== image.id);
+
+    return this.db.setGame(maybeGame);
   }
 }
