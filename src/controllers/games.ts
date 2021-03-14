@@ -83,7 +83,7 @@ export const playerReady = ({ notifier, gameService }: Services) => async (
   }
   notifier.notifyGameClients(gameCode, Events.PlayerReady, result);
 
-  const allReady = gameService.allPlayersReady(gameCode);
+  const allReady = await gameService.allPlayersReady(gameCode);
   if (!isErr(allReady) && allReady) {
     notifier.notifyGameClients(gameCode, Events.GameReady, await gameService.getGame(gameCode));
     const updatedGame = await gameService.startNewRound(gameCode);
