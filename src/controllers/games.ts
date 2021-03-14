@@ -52,6 +52,7 @@ export const createGame = ({ gameService }: Services) => async (
     currentRound: 1,
     totalPlayers,
     rounds: createRounds(totalRounds),
+    revision: 1,
   };
   await gameService.addGame(newGame);
 

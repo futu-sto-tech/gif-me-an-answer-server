@@ -14,6 +14,7 @@ export interface Game {
   currentRound: number;
   totalPlayers: number;
   rounds: GameRound[];
+  revision: number;
 }
 
 export enum GameRoundStatus {

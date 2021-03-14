@@ -22,9 +22,10 @@ export class InMemoryGameDb implements GameDb {
   }
 
   setGame(game: Game) {
-    this.games[game.code] = game;
+    const g = { ...game, revision: game.revision + 1 };
+    this.games[game.code] = g;
 
-    return Promise.resolve(game);
+    return Promise.resolve(g);
   }
 
   exists(code: number) {
@@ -61,12 +62,13 @@ export class RedisGameDb implements GameDb {
 
   setGame(game: Game): Promise<Game> {
     return new Promise((resolve, reject) => {
-      this.client.set(`${this.prefix}:${game.code}`, JSON.stringify(game), 'EX', this.gameTtlSec, (err, _result) => {
+      const g = { ...game, revision: game.revision + 1 };
+      this.client.set(`${this.prefix}:${game.code}`, JSON.stringify(g), 'EX', this.gameTtlSec, (err, _result) => {
         if (err) {
           return reject(err);
         }
 
-        resolve(game);
+        resolve(g);
       });
     });
   }
