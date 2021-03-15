@@ -1,3 +1,6 @@
+import { ClientNotifier } from './services/clientNotifier';
+import { GameService } from './services/gameService';
+
 export enum GameStatus {
   ACTIVE = 'ACTIVE',
   FINISHED = 'FINISHED',
@@ -11,6 +14,7 @@ export interface Game {
   currentRound: number;
   totalPlayers: number;
   rounds: GameRound[];
+  revision: number;
 }
 
 export enum GameRoundStatus {
@@ -65,4 +69,9 @@ export enum Events {
   RoundStarted = 'roundstarted',
   RoundStateChanged = 'roundstatechanged',
   RoundImagePresented = 'roundimagepresented',
+}
+
+export interface Services {
+  gameService: GameService;
+  notifier: ClientNotifier;
 }

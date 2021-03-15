@@ -14,6 +14,9 @@ import httpContext from 'express-http-context';
 import { requestContext } from './middleware/requestContext';
 import { requestLogger } from './middleware/requestLogger';
 import { ClientNotifier } from './services/clientNotifier';
+import { GameService } from './services/gameService';
+import { Services } from './types';
+import { InMemoryGameDb, RedisGameDb } from './services/db';
 
 const app = express();
 
@@ -31,11 +34,25 @@ app.get('/api-spec', (_req, res) => {
   res.sendFile(path.resolve(__dirname, './api-spec.yaml'));
 });
 
-const notifier = new ClientNotifier();
+const db = config.REDIS_URL ? new RedisGameDb() : new InMemoryGameDb();
 
-app.use('/api/v1/games', GamesRouter(notifier));
+const services: Services = {
+  notifier: new ClientNotifier(),
+  gameService: new GameService(db),
+};
+
+app.use('/api/v1/games', GamesRouter(services));
 app.use('/api/v1/gifs', GifsRouter());
 
 app.use(errorHandler());
+
+const cleanup = () => {
+  logger.info({ message: 'Server cleanup finished' });
+  process.exit(0);
+};
+
+// Ensures Docker can shutdown the process correctly
+process.on('SIGINT', cleanup);
+process.on('SIGTERM', cleanup);
 
 app.listen(config.PORT, () => logger.info({ message: `Running on ${config.PORT}!` }));
