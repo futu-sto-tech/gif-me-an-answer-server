@@ -2,8 +2,9 @@ import { Request, Response } from 'express';
 import { Events, Game, GameRound, GameRoundStatus, GameStatus, PlayerStatus, Services } from '../types';
 import CAPTIONS_JSON from '../data/captions.json';
 import codeGenerator from '../codeGenerator';
-import { isErr } from '../utils';
+import { Err, isErr } from '../utils';
 import logger from '../logger';
+import { GameServiceErrors } from '../services/gameService';
 
 const CAPTIONS_SIZE = CAPTIONS_JSON.length;
 
@@ -38,6 +39,24 @@ const createRounds = (rounds: number): GameRound[] => {
   return gameRounds;
 };
 
+const handleError = ({ error }: Err<GameServiceErrors>, res: Response): Response => {
+  switch (error) {
+    case 'no-such-game':
+      return res.sendStatus(404);
+    case 'no-such-player':
+    case 'player-exists':
+    case 'no-such-image':
+    case 'game-exists':
+      return res.status(400).json({ message: error });
+    case 'bad-round-state':
+      return res.status(500).json({ message: error });
+    default: {
+      logger.warn('Unhandled game service error:', error);
+      return res.status(500).json({ message: error });
+    }
+  }
+};
+
 export const createGame = ({ gameService }: Services) => async (
   req: Request<{}, any, { rounds: number; players: number }>,
   res: Response
@@ -54,7 +73,11 @@ export const createGame = ({ gameService }: Services) => async (
     rounds: createRounds(totalRounds),
     revision: 1,
   };
-  await gameService.addGame(newGame);
+  const result = await gameService.addGame(newGame);
+
+  if (isErr(result)) {
+    return handleError(result, res);
+  }
 
   res.json(newGame);
 };
@@ -62,12 +85,12 @@ export const createGame = ({ gameService }: Services) => async (
 export const getGame = ({ gameService }: Services) => async (req: Request, res: Response) => {
   const code = Number(req.params.code);
   const game = await gameService.getGame(code);
-  if (game) {
-    res.json(game);
-    return;
+
+  if (isErr(game)) {
+    return handleError(game, res);
   }
 
-  res.sendStatus(404);
+  res.json(game);
 };
 
 export const playerReady = ({ notifier, gameService }: Services) => async (
@@ -80,12 +103,18 @@ export const playerReady = ({ notifier, gameService }: Services) => async (
   const result = await gameService.playerReady(gameCode, playerId);
 
   if (isErr(result)) {
-    return result.error === 'no-such-game' ? res.sendStatus(404) : res.status(400).json({ message: result.error });
+    return handleError(result, res);
   }
+
   notifier.notifyGameClients(gameCode, Events.PlayerReady, result);
 
   const allReady = await gameService.allPlayersReady(gameCode);
-  if (!isErr(allReady) && allReady) {
+
+  if (isErr(allReady)) {
+    return handleError(allReady, res);
+  }
+
+  if (allReady) {
     notifier.notifyGameClients(gameCode, Events.GameReady, await gameService.getGame(gameCode));
     const updatedGame = await gameService.startNewRound(gameCode);
     notifier.notifyGameClients(gameCode, Events.RoundStarted, updatedGame);
@@ -101,7 +130,7 @@ export const joinGame = ({ notifier, gameService }: Services) => async (req: Req
   const player = await gameService.addPlayer(code, name);
 
   if (isErr(player)) {
-    return player.error === 'no-such-game' ? res.sendStatus(404) : res.status(400).json({ message: player.error });
+    return handleError(player, res);
   }
 
   notifier.notifyGameClients(code, Events.PlayerJoined, await gameService.getGame(code));
@@ -120,20 +149,22 @@ export const selectImage = ({ notifier, gameService }: Services) => async (
   const maybeGame = await gameService.selectImage(gameCode, player, url);
 
   if (isErr(maybeGame)) {
-    return maybeGame.error === 'no-such-player'
-      ? res.status(400).json({ message: maybeGame.error })
-      : res.sendStatus(404);
+    return handleError(maybeGame, res);
   }
 
   notifier.notifyGameClients(gameCode, Events.PlayerSelectedGif, maybeGame);
 
   const allSelected = await gameService.allPlayersInState(gameCode, PlayerStatus.SELECTED_GIF);
-  if (!isErr(allSelected) && allSelected) {
+
+  if (isErr(allSelected)) {
+    return handleError(allSelected, res);
+  }
+
+  if (allSelected) {
     const game = await gameService.startPresentation(gameCode);
 
     if (isErr(game)) {
-      logger.error({ message: 'Something went wrong when selecting image', gameCode, player, url });
-      return res.sendStatus(500);
+      return handleError(game, res);
     }
 
     notifier.notifyGameClients(gameCode, Events.RoundStateChanged, game);
@@ -170,17 +201,7 @@ export const deselectImage = ({ notifier, gameService }: Services) => async (
   const maybeGame = await gameService.deselectImage(gameCode, roundNumber, player, url);
 
   if (isErr(maybeGame)) {
-    switch (maybeGame.error) {
-      case 'no-such-game':
-      case 'no-such-round':
-        return res.sendStatus(404);
-      case 'no-such-image':
-        return res.status(400).json({ message: `No matching image`, player, url });
-      case 'bad-round-state':
-        return res.sendStatus(500);
-      default:
-        throw new Error(`Unhandled error state when deselecting image: ${maybeGame.error}`);
-    }
+    return handleError(maybeGame, res);
   }
 
   notifier.notifyGameClients(gameCode, Events.PlayerDeselectedGif, maybeGame);
@@ -199,15 +220,18 @@ export const vote = ({ notifier, gameService }: Services) => async (
   const maybeGame = await gameService.vote(code, playerId, imageId);
 
   if (isErr(maybeGame)) {
-    return maybeGame.error === 'no-such-game'
-      ? res.sendStatus(404)
-      : res.status(400).json({ message: maybeGame.error });
+    return handleError(maybeGame, res);
   }
 
   notifier.notifyGameClients(code, Events.PlayerVoted, maybeGame);
 
   const allVoted = await gameService.allPlayersInState(code, PlayerStatus.VOTED);
-  if (!isErr(allVoted) && allVoted) {
+
+  if (isErr(allVoted)) {
+    return handleError(allVoted, res);
+  }
+
+  if (allVoted) {
     await gameService.assignPoints(code);
     const game = await gameService.finishRound(code);
     notifier.notifyGameClients(code, Events.RoundStateChanged, game);
@@ -220,7 +244,7 @@ export const vote = ({ notifier, gameService }: Services) => async (
         return;
       }
 
-      if (currentGame && currentGame.currentRound === currentGame.totalRounds) {
+      if (currentGame.currentRound === currentGame.totalRounds) {
         const g = await gameService.finishGame(code);
         notifier.notifyGameClients(code, Events.GameFinished, g);
       } else {
@@ -241,8 +265,7 @@ export const gameEvents = ({ notifier, gameService }: Services) => async (req: R
   const game = await gameService.getGame(gameCode);
 
   if (isErr(game)) {
-    res.status(404).json({ message: `No game exists with code ${gameCode}` });
-    return;
+    return handleError(game, res);
   }
 
   res.writeHead(200, {
