@@ -1,6 +1,4 @@
-export type Result<T, E> = Ok<T> | Err<E>;
-
-export type Ok<T> = T;
+export type Result<T, E> = T | Err<E>;
 
 export interface Err<E> {
   error: E;
