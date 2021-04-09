@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { isErr, Result as R } from '../utils';
 import { GameDb } from './db';
 
-type GameServiceErrors =
+export type GameServiceErrors =
   | 'no-such-game'
   | 'no-such-player'
   | 'no-such-round'
