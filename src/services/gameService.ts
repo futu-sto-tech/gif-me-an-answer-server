@@ -40,7 +40,11 @@ export class GameService {
     return this.db.setGame(game);
   }
 
-  async addPlayer(code: number, name: string): Promise<Result<Player, 'no-such-game' | 'player-exists'>> {
+  async addPlayer(
+    code: number,
+    name: string,
+    isHost: boolean
+  ): Promise<Result<Player, 'no-such-game' | 'player-exists'>> {
     const maybeGame = await this.getGame(code);
 
     if (isErr(maybeGame)) {
@@ -54,6 +58,7 @@ export class GameService {
     const player: Player = {
       id: uuidv4(),
       name,
+      isHost,
       status: PlayerStatus.JOINED,
       points: 0,
     };
@@ -63,6 +68,18 @@ export class GameService {
     this.db.setGame({ ...maybeGame, players });
 
     return player;
+  }
+
+  async changePlayerCount(code: number, newCount: number): Promise<Result<Game, 'no-such-game'>> {
+    const maybeGame = await this.getGame(code);
+
+    if (isErr(maybeGame)) {
+      return maybeGame;
+    }
+
+    const updatedGame = { ...maybeGame, totalPlayers: newCount };
+
+    return this.db.setGame(updatedGame);
   }
 
   async playerReady(code: number, playerId: string): Promise<Result<Game, 'no-such-game' | 'no-such-player'>> {
