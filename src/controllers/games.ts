@@ -150,6 +150,12 @@ export const forceStartGame = ({ notifier, gameService }: Services) => async (re
   const newCount = game.players.length;
 
   gameService.changePlayerCount(game.code, newCount);
+
+  notifier.notifyGameClients(code, Events.GameReady, await gameService.getGame(code));
+  const updatedGame = await gameService.startNewRound(code);
+  notifier.notifyGameClients(code, Events.RoundStarted, updatedGame);
+
+  res.sendStatus(200);
 };
 
 export const selectImage = ({ notifier, gameService }: Services) => async (
