@@ -126,8 +126,9 @@ export const playerReady = ({ notifier, gameService }: Services) => async (
 export const joinGame = ({ notifier, gameService }: Services) => async (req: Request, res: Response) => {
   const code = Number(req.params.code);
   const name = req.body.name;
+  const isHost: boolean = req.body.isHost || false;
 
-  const player = await gameService.addPlayer(code, name);
+  const player = await gameService.addPlayer(code, name, isHost);
 
   if (isErr(player)) {
     return handleError(player, res);
@@ -136,6 +137,25 @@ export const joinGame = ({ notifier, gameService }: Services) => async (req: Req
   notifier.notifyGameClients(code, Events.PlayerJoined, await gameService.getGame(code));
 
   res.json(player);
+};
+
+export const forceStartGame = ({ notifier, gameService }: Services) => async (req: Request, res: Response) => {
+  const code = Number(req.params.code);
+  const game = await gameService.getGame(code);
+
+  if (isErr(game)) {
+    return handleError(game, res);
+  }
+
+  const newCount = game.players.length;
+
+  gameService.changePlayerCount(game.code, newCount);
+
+  notifier.notifyGameClients(code, Events.GameReady, await gameService.getGame(code));
+  const updatedGame = await gameService.startNewRound(code);
+  notifier.notifyGameClients(code, Events.RoundStarted, updatedGame);
+
+  res.sendStatus(200);
 };
 
 export const selectImage = ({ notifier, gameService }: Services) => async (

@@ -5,6 +5,7 @@ import {
   gameEvents,
   getGame,
   joinGame,
+  forceStartGame,
   playerReady,
   selectImage,
   deselectImage,
@@ -18,6 +19,7 @@ export default function GamesRouter(services: Services) {
   router.get('/:code', handlerWrapper(getGame(services)));
   router.post('/:code/join', handlerWrapper(joinGame(services)));
   router.post('/:code/ready', handlerWrapper(playerReady(services)));
+  router.get('/:code/force-start', handlerWrapper(forceStartGame(services)));
   router.post('/:code/rounds/:order/done', NotImplemented);
   router.post('/:code/rounds/:order/images', handlerWrapper(selectImage(services)));
   router.post('/:code/rounds/:order/images/deselect', handlerWrapper(deselectImage(services)));

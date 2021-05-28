@@ -52,6 +52,7 @@ export interface Player {
   status: PlayerStatus;
   name: string;
   points: number;
+  isHost: boolean;
 }
 
 export enum Events {
