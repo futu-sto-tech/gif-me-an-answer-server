@@ -302,6 +302,3 @@ export const gameEvents = ({ notifier, gameService }: Services) => async (req: R
     notifier.removeClient(clientId);
   });
 };
-function changePlayerCount() {
-  throw new Error('Function not implemented.');
-}
