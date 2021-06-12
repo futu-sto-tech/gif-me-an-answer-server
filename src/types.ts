@@ -38,6 +38,7 @@ export interface Image {
   url: string;
   playerId: string;
   votes: number;
+  votedBy: string[];
 }
 
 export enum PlayerStatus {

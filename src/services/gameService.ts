@@ -153,6 +153,7 @@ export class GameService {
         id: Buffer.from(imageUrl).toString('base64'),
         url: imageUrl,
         playerId,
+        votedBy: [],
         votes: 0,
       });
 
@@ -254,6 +255,7 @@ export class GameService {
     }
 
     image.votes += 1;
+    image.votedBy = [...image.votedBy, playerId];
     player.status = PlayerStatus.VOTED;
 
     return this.db.setGame(maybeGame);
