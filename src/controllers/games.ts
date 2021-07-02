@@ -24,7 +24,7 @@ const getCaptions = (length: number): string[] => {
   return selectedCaptionIndexes.map((i) => CAPTIONS_JSON[i].caption);
 };
 
-const createRounds = (rounds: number): GameRound[] => {
+export const createRounds = (rounds: number): GameRound[] => {
   const captions = getCaptions(rounds);
   const gameRounds = Array(rounds)
     .fill('')
