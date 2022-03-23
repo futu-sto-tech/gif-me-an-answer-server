@@ -3,6 +3,7 @@ import { assert } from 'console';
 import EventSource from 'eventsource';
 
 const BASE_URL = process.env.APP_URL || 'http://localhost:8000/api/v1';
+const isDebug = process.env.DEBUG === 'true' || process.env.DEBUG === '1';
 
 const sleep = (seconds: number) => new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 
@@ -38,8 +39,10 @@ const image2 = 'https://gifs.com/image2';
       if (event.data?.error || (event.data && Object.keys(event.data).length === 0)) {
         console.error(event);
         process.exit(1);
-      } else {
+      } else if (isDebug) {
         console.debug(JSON.stringify(event, null, 2));
+      } else {
+        console.log(event.event);
       }
       collectedEvents.push(event);
     });
